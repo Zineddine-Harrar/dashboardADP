@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Aggregated daily metrics for cleaning operations by zone
+model DailyZoneCleaningMetrics {
+  id                         Int      @id @default(autoincrement())
+  
+  // Date and Zone identification
+  date                       DateTime @db.Date
+  zoneId                     String   @db.VarChar(500)
+  zoneName                   String   @db.VarChar(200)
+  
+  // Occurrences from visitBoundsExplanation parsing
+  occurrencesMaintenance     Int?     @default(0)
+  occurrencesAdditionnelles  Int?     @default(0)
+  
+  // PAX (passenger) metrics
+  paxTotal                   Int?     @default(0)
+  
+  // Duration metrics in seconds
+  dureeMaintenanceSeconds    Int?     @default(0)
+  dureeAdditionnelleSeconds  Int?     @default(0)
+  
+  // Metadata
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+  
+  // Unique constraint: one record per date/zone combination
+  @@unique([date, zoneId])
+  
+  // Indexes for performance
+  @@index([date])
+  @@index([zoneId])
+  
+  @@map("daily_zone_cleaning_metrics")
+}
