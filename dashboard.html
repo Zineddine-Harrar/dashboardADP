@@ -657,7 +657,7 @@
                             const aTotalSec = (a.dureeMaintenanceSeconds || 0) + (a.dureeAdditionnelleSeconds || 0);
                             const aTotalOcc = (a.occurrencesMaintenance || 0) + (a.occurrencesAdditionnelles || 0);
                             aVal = aTotalOcc > 0 ? aTotalSec / aTotalOcc : 0;
-                            
+
                             const bTotalSec = (b.dureeMaintenanceSeconds || 0) + (b.dureeAdditionnelleSeconds || 0);
                             const bTotalOcc = (b.occurrencesMaintenance || 0) + (b.occurrencesAdditionnelles || 0);
                             bVal = bTotalOcc > 0 ? bTotalSec / bTotalOcc : 0;
@@ -717,11 +717,11 @@
 
                 // Calculer la durée totale en secondes
                 const totalSeconds = (metric.dureeMaintenanceSeconds || 0) + (metric.dureeAdditionnelleSeconds || 0);
-                // Calculer le nombre total d'occurrences
-                const totalOccurrences = (metric.occurrencesMaintenance || 0) + (metric.occurrencesAdditionnelles || 0);
+                // Calculer le nombre d'occurrences (Maintenance uniquement)
+                const totalOccurrences = (metric.occurrencesMaintenance || 0);
                 // Calculer la durée moyenne par occurrence en minutes
-                const avgMinPerOccurrence = totalOccurrences > 0 
-                    ? Math.round(totalSeconds / totalOccurrences / 60) 
+                const avgMinPerOccurrence = totalOccurrences > 0
+                    ? Math.round(totalSeconds / totalOccurrences / 60)
                     : 0;
 
                 tableHtml += `
