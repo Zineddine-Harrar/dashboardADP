@@ -27,3 +27,9 @@ yarn-error.log*
 
 # OS
 Thumbs.db
+
+# Data files (Excel)
+*.xlsx
+*.xls
+!**/example*.xlsx
+!**/sample*.xlsx
