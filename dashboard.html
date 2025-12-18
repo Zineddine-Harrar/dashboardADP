@@ -659,9 +659,11 @@
                     )
                 );
 
-                const dates = availableDates.map(d =>
+                // Reverse for chronological order (Oldest -> Newest on the chart)
+                const chartStats = [...allStats].reverse();
+                const chartDates = availableDates.map(d =>
                     new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                );
+                ).reverse();
 
                 const ctx = document.getElementById('evolutionChart').getContext('2d');
 
@@ -674,11 +676,11 @@
                 evolutionChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: dates,
+                        labels: chartDates,
                         datasets: [
                             {
                                 label: 'Passagers',
-                                data: allStats.map(s => s.totalPax),
+                                data: chartStats.map(s => s.totalPax),
                                 borderColor: '#2563eb', // Primary Blue
                                 backgroundColor: 'rgba(37, 99, 235, 0.05)',
                                 tension: 0.3,
@@ -688,7 +690,7 @@
                             },
                             {
                                 label: 'Maintenance (h)',
-                                data: allStats.map(s => s.totalMaintenanceHours),
+                                data: chartStats.map(s => s.totalMaintenanceHours),
                                 borderColor: '#10b981', // Emerald
                                 borderDash: [5, 5],
                                 tension: 0.3,
@@ -698,7 +700,7 @@
                             },
                             {
                                 label: 'Renfort (h)',
-                                data: allStats.map(s => s.totalAdditionnelleHours),
+                                data: chartStats.map(s => s.totalAdditionnelleHours),
                                 borderColor: '#f59e0b', // Amber
                                 borderDash: [2, 2],
                                 tension: 0.3,
