@@ -4,440 +4,573 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cleaning Analytics Dashboard</title>
+    <title>Analytics Dashboard</title>
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons: Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        :root {
+            /* Light Theme (Default) */
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #64748b;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --primary: #3b82f6;
+            --primary-dark: #60a5fa;
+            --secondary: #94a3b8;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .container {
-            max-width: 1400px;
+        .layout {
+            max-width: 1440px;
             margin: 0 auto;
+            padding: 2rem;
         }
 
+        /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--bg-card);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .brand h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .btn:hover {
+            background: #f1f5f9;
+        }
+
+        [data-theme="dark"] .btn:hover {
+            background: #334155;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        select {
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            font-family: inherit;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Stats Grid - Fixed Responsiveness */
+        .stats-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            /* Default to 4 columns for large screens */
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                /* 2 columns for medium screens (2-2 layout) */
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .stats-grid {
+                /* 1 column for mobile (1-1-1-1 layout) */
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+            cursor: default;
+        }
+
+        /* Hover Effect: Scale Up */
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .stat-icon {
+            color: var(--text-muted);
+            font-size: 1.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+        }
+
+        /* Charts */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .header-left h1 {
-            color: #667eea;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .date-selector {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .date-selector select {
-            padding: 12px 20px;
-            font-size: 1.1em;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            min-width: 200px;
-            max-width: 100%;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
-                gap: 20px;
-            }
-
-            .date-selector {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .date-selector select {
-                flex-grow: 1;
-            }
-        }
-
-        .date-selector select:hover {
-            border-color: #764ba2;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .date-selector button {
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
+        .card-title {
+            font-size: 1.125rem;
             font-weight: 600;
-            transition: transform 0.2s;
-        }
-
-        .date-selector button:hover {
-            transform: scale(1.05);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        /* Responsive Grid: Avoid 3+1 orphanage by forcing 2 columns on medium screens */
-        @media (min-width: 650px) and (max-width: 1100px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            border-left: 5px solid;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .stat-card.blue {
-            border-color: #3b82f6;
-        }
-
-        .stat-card.purple {
-            border-color: #8b5cf6;
-        }
-
-        .stat-card.green {
-            border-color: #10b981;
-        }
-
-        .stat-card.pink {
-            border-color: #ec4899;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .chart-container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .chart-container h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+            color: var(--text-main);
         }
 
         .chart-wrapper {
             position: relative;
-            height: 400px;
+            height: 350px;
+            width: 100%;
         }
 
-        .table-container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
-        }
-
+        /* Table */
         .table-controls {
             display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
             align-items: center;
             flex-wrap: wrap;
         }
 
-        .table-controls label {
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        .table-controls select,
-        .table-controls input {
-            padding: 10px 15px;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: all 0.3s;
-        }
-
-        .table-controls select:hover,
-        .table-controls input:hover {
-            border-color: #764ba2;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-        }
-
-        .table-controls input {
+        .search-input {
+            position: relative;
+            flex: 1;
             min-width: 250px;
         }
 
-        table {
+        .search-input i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-input input {
+            width: 100%;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        .search-input input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .data-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        thead tr {
-            background: transparent;
-        }
-
-        th {
-            padding: 15px;
-            background: transparent;
+        .data-table th {
             text-align: left;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-body);
+            color: var(--text-muted);
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.85em;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
             cursor: pointer;
-            user-select: none;
-            position: relative;
-            border: none;
+            transition: background 0.2s;
         }
 
-        th:hover {
-            /* Highlight visuel par-dessus le gradient existant */
-            box-shadow: inset 0 0 0 9999px rgba(255, 255, 255, 0.2);
-            cursor: pointer;
+        .data-table th:hover {
+            background: rgba(37, 99, 235, 0.05);
+            color: var(--text-main);
         }
 
-        th.sortable::after {
-            content: ' ↕';
-            opacity: 0.3;
-            font-size: 0.8em;
+        .data-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+            color: var(--text-main);
         }
 
-        th.sort-asc::after {
-            content: ' ▲';
-            opacity: 1;
+        .data-table tbody tr {
+            transition: background 0.2s;
         }
 
-        th.sort-desc::after {
-            content: ' ▼';
-            opacity: 1;
+        .data-table tbody tr:hover {
+            background: rgba(37, 99, 235, 0.03);
+            /* Dark mode specific hover fix */
         }
 
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
+        [data-theme="dark"] .data-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
         }
 
-        tbody tr:hover {
-            background: #f8f9fa;
+        .cell-zone {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
-        .zone-icon {
-            display: inline-flex;
+        .cell-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            font-size: 1.3em;
-            margin-right: 10px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border-radius: 6px;
+            font-size: 1rem;
         }
 
-        .zone-name {
-            font-weight: 600;
-            color: #333;
+        .cell-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cell-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .loading-state,
+        .error-state {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-muted);
+        }
+
+        .error-state {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            border-top: 1px solid var(--border);
+            padding-top: 2rem;
         }
 
         .badge {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            min-width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 1.1em;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
 
-        .badge-blue {
-            background: #dbeafe;
-            color: #1e40af;
+        .badge-neutral {
+            background: #f1f5f9;
+            color: #475569;
         }
 
-        .badge-purple {
-            background: #e9d5ff;
-            color: #6b21a8;
+        .badge-primary {
+            background: #eff6ff;
+            color: #1d4ed8;
         }
 
-        .badge-green {
-            background: #d1fae5;
-            color: #065f46;
+        .badge-success {
+            background: #ecfdf5;
+            color: #047857;
         }
 
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 1.2em;
-            color: white;
+        .badge-warning {
+            background: #fffbeb;
+            color: #b45309;
         }
 
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
+        /* Dark mode badges */
+        [data-theme="dark"] .badge-neutral {
+            background: #334155;
+            color: #cbd5e1;
         }
 
-        .footer {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 30px;
-            text-align: center;
-            color: #666;
+        [data-theme="dark"] .badge-primary {
+            background: rgba(37, 99, 235, 0.2);
+            color: #93c5fd;
         }
 
-        .icon-1 {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        [data-theme="dark"] .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
         }
 
-        .icon-2 {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        }
-
-        .icon-3 {
-            background: linear-gradient(135deg, #ec4899, #db2777);
-        }
-
-        .icon-4 {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .icon-5 {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
-
-        .icon-6 {
-            background: linear-gradient(135deg, #06b6d4, #0891b2);
-        }
-
-        .icon-7 {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-        }
-
-        .icon-8 {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+        [data-theme="dark"] .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <h1>📊 Cleaning Analytics Dashboard</h1>
-
+    <div class="layout">
+        <!-- Top Navigation -->
+        <header class="header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="ri-dashboard-3-line"></i>
+                </div>
+                <h1>Cleaning Analytics</h1>
             </div>
-            <div class="date-selector">
-                <button onclick="navigateDate(-1)">◀ Précédent</button>
+            <div class="controls">
+                <!-- Theme Toggle -->
+                <button class="btn" onclick="toggleTheme()" title="Mode Nuit">
+                    <i id="themeIcon" class="ri-moon-line"></i>
+                </button>
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+
+                <button class="btn" onclick="navigateDate(-1)">
+                    <i class="ri-arrow-left-s-line"></i>
+                </button>
                 <select id="dateSelector" onchange="loadSelectedDate()">
                     <option value="">Chargement...</option>
                 </select>
-                <button onclick="navigateDate(1)">Suivant ▶</button>
+                <button class="btn" onclick="navigateDate(1)">
+                    <i class="ri-arrow-right-s-line"></i>
+                </button>
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+                <button class="btn btn-primary" onclick="window.location.href='upload.html'">
+                    <i class="ri-upload-cloud-line"></i>
+                    <span>Importer</span>
+                </button>
             </div>
-        </div>
+        </header>
 
+        <!-- KPI Grid -->
         <div class="stats-grid" id="statsGrid">
-            <div class="loading">Chargement des statistiques...</div>
+            <div class="loading-state">Chargement des données...</div>
         </div>
 
-        <div class="chart-container">
-            <h2>📈 Évolution Temporelle des KPI</h2>
+        <!-- Chart Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Évolution Temporelle</h2>
+            </div>
             <div class="chart-wrapper">
                 <canvas id="evolutionChart"></canvas>
             </div>
         </div>
 
-        <div class="table-container">
-            <h2 style="margin-bottom: 20px; color: #333;">📋 Liste des Zones</h2>
+        <!-- Data Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Détail des Zones</h2>
+            </div>
             <div class="table-controls">
-                <div>
-                    <label for="rowLimit">Afficher :</label>
-                    <select id="rowLimit" onchange="applyFiltersAndSort()">
-                        <option value="10">10 zones</option>
-                        <option value="30" selected>30 zones</option>
-                        <option value="50">50 zones</option>
-                        <option value="100">100 zones</option>
-                        <option value="all">Toutes</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="searchZone">Rechercher :</label>
-                    <input type="text" id="searchZone" placeholder="Filtrer par nom de zone..."
+                <div class="search-input">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="searchZone" placeholder="Rechercher une zone..."
                         oninput="applyFiltersAndSort()">
                 </div>
-                <div id="displayInfo" style="color: #666; margin-left: auto;"></div>
+                <div style="flex: 1;"></div>
+                <select id="rowLimit" onchange="applyFiltersAndSort()" style="width: auto;">
+                    <option value="10">10 lignes</option>
+                    <option value="30" selected>30 lignes</option>
+                    <option value="50">50 lignes</option>
+                    <option value="all">Tout afficher</option>
+                </select>
             </div>
-            <div id="tableContent">
-                <div class="loading">Chargement des données...</div>
+
+            <div class="table-container" style="overflow-x: auto;">
+                <div id="tableContent">
+                    <div class="loading-state">Chargement du tableau...</div>
+                </div>
+                <div id="displayInfo"
+                    style="padding: 1rem 1.5rem; color: var(--text-muted); font-size: 0.875rem; text-align: right;">
+                </div>
             </div>
         </div>
 
-        <div class="footer">
-            © 2025 Cleaning Analytics • Powered by Node.js & Vanilla JavaScript
-            <br>
-            <a href="upload.html"
-                style="color: #667eea; text-decoration: none; margin-top: 10px; display: inline-block; font-weight: 600;">📦
-                Upload ZIP</a>
-        </div>
+        <footer class="footer">
+            <p>&copy; 2025 Atalian Global Services &bull; Dashboard Analytics</p>
+        </footer>
     </div>
 
     <script>
         const API_URL = 'http://localhost:3000';
-        const zoneEmojis = ['🏢', '👥', '🚻', '🚪', '🏃', '🚺', '🚹', '🔧'];
+
+        // Theme Logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+            updateChartTheme(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.className = 'ri-sun-line';
+            } else {
+                icon.className = 'ri-moon-line';
+            }
+        }
+
+        function updateChartTheme(theme) {
+            if (evolutionChart) {
+                const isDark = theme === 'dark';
+                Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+                evolutionChart.options.scales.y.grid.color = isDark ? '#334155' : '#f1f5f9';
+                evolutionChart.update();
+            }
+        }
+
+        // Init Theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.addEventListener('DOMContentLoaded', () => updateThemeIcon(savedTheme));
+
+        // Professional Icon Mapping (RemixIcon)
+        const getZoneIcon = (index) => {
+            const icons = [
+                'ri-building-4-line',
+                'ri-community-line',
+                'ri-store-2-line',
+                'ri-hotel-line',
+                'ri-building-2-line',
+                'ri-government-line'
+            ];
+            return icons[index % icons.length];
+        };
 
         let availableDates = [];
         let currentDateIndex = 0;
@@ -446,6 +579,7 @@
         let sortColumn = null;
         let sortDirection = 'asc';
 
+        // Initialize
         async function loadAvailableDates() {
             try {
                 const response = await fetch(`${API_URL}/metrics/dates/available`);
@@ -470,21 +604,12 @@
             } catch (error) {
                 console.error('Error loading dates:', error);
                 document.getElementById('statsGrid').innerHTML =
-                    '<div class="error">❌ Erreur de chargement. Vérifiez que l\'API tourne sur http://localhost:3000</div>';
+                    '<div class="error-state"><i class="ri-error-warning-line"></i> Connexion au serveur échouée</div>';
             }
         }
 
         async function loadDate(date) {
             try {
-                /* Date display removed from header
-                document.getElementById('currentDate').textContent =
-                    `📅 ${new Date(date).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    })}`;
-                */
-
                 const [statsRes, metricsRes] = await Promise.all([
                     fetch(`${API_URL}/metrics/stats/summary?date=${date}`),
                     fetch(`${API_URL}/metrics?date=${date}`)
@@ -500,8 +625,29 @@
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('statsGrid').innerHTML =
-                    '<div class="error">❌ Erreur de chargement des données</div>';
+                    '<div class="error-state">Erreur de chargement des données</div>';
             }
+        }
+
+        function renderStats(stats) {
+            const kpiConfig = [
+                { label: 'Total Zones', value: stats.totalZones, icon: 'ri-map-pin-line' },
+                { label: 'Total Passagers', value: stats.totalPax.toLocaleString('fr-FR'), icon: 'ri-group-line' },
+                { label: 'Heures Maintenance', value: stats.totalMaintenanceHours.toLocaleString('fr-FR') + 'h', icon: 'ri-tools-line' },
+                { label: 'Heures Renfort', value: stats.totalAdditionnelleHours.toLocaleString('fr-FR') + 'h', icon: 'ri-time-line' }
+            ];
+
+            const statsHtml = kpiConfig.map(kpi => `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">${kpi.label}</span>
+                        <i class="${kpi.icon} stat-icon"></i>
+                    </div>
+                    <div class="stat-value">${kpi.value}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('statsGrid').innerHTML = statsHtml;
         }
 
         async function loadEvolutionChart() {
@@ -514,17 +660,16 @@
                 );
 
                 const dates = availableDates.map(d =>
-                    new Date(d).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short'
-                    })
+                    new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
                 );
 
                 const ctx = document.getElementById('evolutionChart').getContext('2d');
 
-                if (evolutionChart) {
-                    evolutionChart.destroy();
-                }
+                // Professional Theme Colors
+                Chart.defaults.font.family = "'Inter', sans-serif";
+                Chart.defaults.color = '#64748b';
+
+                if (evolutionChart) evolutionChart.destroy();
 
                 evolutionChart = new Chart(ctx, {
                     type: 'line',
@@ -532,27 +677,33 @@
                         labels: dates,
                         datasets: [
                             {
-                                label: 'Total Passagers',
+                                label: 'Passagers',
                                 data: allStats.map(s => s.totalPax),
-                                borderColor: '#8b5cf6',
-                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                                tension: 0.4,
+                                borderColor: '#2563eb', // Primary Blue
+                                backgroundColor: 'rgba(37, 99, 235, 0.05)',
+                                tension: 0.3,
+                                borderWidth: 2,
+                                fill: true,
                                 yAxisID: 'y'
                             },
                             {
-                                label: 'Heures Maintenance',
+                                label: 'Maintenance (h)',
                                 data: allStats.map(s => s.totalMaintenanceHours),
-                                borderColor: '#10b981',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                tension: 0.4,
+                                borderColor: '#10b981', // Emerald
+                                borderDash: [5, 5],
+                                tension: 0.3,
+                                borderWidth: 2,
+                                pointRadius: 0,
                                 yAxisID: 'y1'
                             },
                             {
-                                label: 'Heures Renfort',
+                                label: 'Renfort (h)',
                                 data: allStats.map(s => s.totalAdditionnelleHours),
-                                borderColor: '#ec4899',
-                                backgroundColor: 'rgba(236, 72, 153, 0.1)',
-                                tension: 0.4,
+                                borderColor: '#f59e0b', // Amber
+                                borderDash: [2, 2],
+                                tension: 0.3,
+                                borderWidth: 2,
+                                pointRadius: 0,
                                 yAxisID: 'y1'
                             }
                         ]
@@ -560,66 +711,45 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
+                        interaction: { mode: 'index', intersect: false },
                         plugins: {
                             legend: {
                                 position: 'top',
-                                labels: {
-                                    font: { size: 14, weight: 'bold' },
-                                    padding: 20
-                                }
+                                align: 'end',
+                                labels: { boxWidth: 10, usePointStyle: true }
                             },
-                            tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                padding: 12,
-                                titleFont: { size: 14, weight: 'bold' },
-                                bodyFont: { size: 13 }
-                            }
                         },
                         scales: {
                             y: {
                                 type: 'linear',
                                 display: true,
                                 position: 'left',
-                                title: {
-                                    display: true,
-                                    text: 'Passagers',
-                                    font: { size: 14, weight: 'bold' }
-                                },
-                                ticks: {
-                                    callback: function (value) {
-                                        return value.toLocaleString('fr-FR');
-                                    }
-                                }
+                                grid: { color: '#f1f5f9' },
+                                ticks: { callback: v => v.toLocaleString('fr-FR') }
                             },
                             y1: {
                                 type: 'linear',
                                 display: true,
                                 position: 'right',
-                                title: {
-                                    display: true,
-                                    text: 'Heures',
-                                    font: { size: 14, weight: 'bold' }
-                                },
-                                grid: {
-                                    drawOnChartArea: false
-                                }
+                                grid: { display: false }
+                            },
+                            x: {
+                                grid: { display: false }
                             }
                         }
                     }
                 });
-
             } catch (error) {
-                console.error('Error loading evolution chart:', error);
+                console.error(error);
             }
         }
 
+        // Table & Filtering Logic
         function loadSelectedDate() {
             const selector = document.getElementById('dateSelector');
-            currentDateIndex = parseInt(selector.value);
+            const val = selector.value;
+            if (val === "") return;
+            currentDateIndex = parseInt(val);
             loadDate(availableDates[currentDateIndex]);
         }
 
@@ -632,90 +762,42 @@
             }
         }
 
-        function renderStats(stats) {
-            const statsHtml = `
-                <div class="stat-card blue">
-                    <div class="stat-label">Total Zones</div>
-                    <div class="stat-value">${stats.totalZones}</div>
-                </div>
-                <div class="stat-card purple">
-                    <div class="stat-label">Total Passagers</div>
-                    <div class="stat-value">${stats.totalPax.toLocaleString('fr-FR')}</div>
-                </div>
-                <div class="stat-card green">
-                    <div class="stat-label">Heures Maintenance</div>
-                    <div class="stat-value">${stats.totalMaintenanceHours.toLocaleString('fr-FR')}h</div>
-                </div>
-                <div class="stat-card pink">
-                    <div class="stat-label">Heures Renfort</div>
-                    <div class="stat-value">${stats.totalAdditionnelleHours.toLocaleString('fr-FR')}h</div>
-                </div>
-            `;
-            document.getElementById('statsGrid').innerHTML = statsHtml;
-        }
-
         function applyFiltersAndSort() {
             const searchTerm = document.getElementById('searchZone').value.toLowerCase();
             const rowLimit = document.getElementById('rowLimit').value;
 
-            // Filter metrics
             let filteredMetrics = allMetrics.filter(metric =>
-                metric.zoneName.toLowerCase().includes(searchTerm)
+                metric.zoneName.toLowerCase().includes(searchTerm) ||
+                metric.zoneId.toLowerCase().includes(searchTerm)
             );
 
-            // Sort metrics
             if (sortColumn) {
                 filteredMetrics.sort((a, b) => {
                     let aVal, bVal;
-
                     switch (sortColumn) {
-                        case 'date':
-                            aVal = new Date(a.date);
-                            bVal = new Date(b.date);
-                            break;
-                        case 'zone':
-                            aVal = a.zoneName.toLowerCase();
-                            bVal = b.zoneName.toLowerCase();
-                            break;
-                        case 'maintenance':
-                            aVal = a.occurrencesMaintenance || 0;
-                            bVal = b.occurrencesMaintenance || 0;
-                            break;
-                        case 'additionnelles':
-                            aVal = a.occurrencesAdditionnelles || 0;
-                            bVal = b.occurrencesAdditionnelles || 0;
-                            break;
-                        case 'pax':
-                            aVal = a.paxTotal || 0;
-                            bVal = b.paxTotal || 0;
-                            break;
+                        case 'zone': aVal = a.zoneName.toLowerCase(); bVal = b.zoneName.toLowerCase(); break;
+                        case 'maintenance': aVal = a.occurrencesMaintenance || 0; bVal = b.occurrencesMaintenance || 0; break;
+                        case 'additionnelles': aVal = a.occurrencesAdditionnelles || 0; bVal = b.occurrencesAdditionnelles || 0; break;
+                        case 'pax': aVal = a.paxTotal || 0; bVal = b.paxTotal || 0; break;
                         case 'duree':
-                            const aTotalSec = (a.dureeMaintenanceSeconds || 0) + (a.dureeAdditionnelleSeconds || 0);
-                            const aTotalOcc = (a.occurrencesMaintenance || 0) + (a.occurrencesAdditionnelles || 0);
-                            aVal = aTotalOcc > 0 ? aTotalSec / aTotalOcc : 0;
-
-                            const bTotalSec = (b.dureeMaintenanceSeconds || 0) + (b.dureeAdditionnelleSeconds || 0);
-                            const bTotalOcc = (b.occurrencesMaintenance || 0) + (b.occurrencesAdditionnelles || 0);
-                            bVal = bTotalOcc > 0 ? bTotalSec / bTotalOcc : 0;
+                            const aT = (a.dureeMaintenanceSeconds || 0) + (a.dureeAdditionnelleSeconds || 0);
+                            const aO = (a.occurrencesMaintenance || 0) + (a.occurrencesAdditionnelles || 0);
+                            aVal = aO > 0 ? aT / aO : 0;
+                            const bT = (b.dureeMaintenanceSeconds || 0) + (b.dureeAdditionnelleSeconds || 0);
+                            const bO = (b.occurrencesMaintenance || 0) + (b.occurrencesAdditionnelles || 0);
+                            bVal = bO > 0 ? bT / bO : 0;
                             break;
-                        default:
-                            return 0;
                     }
-
                     if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
                     if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
                     return 0;
                 });
             }
 
-            // Apply row limit
             const total = filteredMetrics.length;
             const displayMetrics = rowLimit === 'all' ? filteredMetrics : filteredMetrics.slice(0, parseInt(rowLimit));
 
-            // Update display info
-            document.getElementById('displayInfo').textContent =
-                `Affichage de ${displayMetrics.length} sur ${total} zones`;
-
+            document.getElementById('displayInfo').textContent = `${displayMetrics.length} résultats / ${total}`;
             renderTable(displayMetrics);
         }
 
@@ -731,67 +813,56 @@
 
         function renderTable(metrics) {
             let tableHtml = `
-                <table>
+                <table class="data-table">
                     <thead>
                         <tr>
-
-                            <th class="sortable ${sortColumn === 'zone' ? 'sort-' + sortDirection : ''}" onclick="sortBy('zone')">Zone</th>
-                            <th class="sortable ${sortColumn === 'maintenance' ? 'sort-' + sortDirection : ''}" onclick="sortBy('maintenance')" style="text-align: center;">Occurr.</th>
-                            <th class="sortable ${sortColumn === 'additionnelles' ? 'sort-' + sortDirection : ''}" onclick="sortBy('additionnelles')" style="text-align: center;">Additionnelles</th>
-                            <th class="sortable ${sortColumn === 'pax' ? 'sort-' + sortDirection : ''}" onclick="sortBy('pax')" style="text-align: center;">Passagers</th>
-                            <th class="sortable ${sortColumn === 'duree' ? 'sort-' + sortDirection : ''}" onclick="sortBy('duree')" style="text-align: right;">Durée Moy. (min/occ)</th>
+                            <th onclick="sortBy('zone')">Zone <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('maintenance')">Occurrences <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('additionnelles')">Renforts <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('pax')">Passagers <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('duree')" style="text-align: right;">Durée Moy. <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                         </tr>
                     </thead>
                     <tbody>
             `;
 
             metrics.forEach((metric, index) => {
-                const emoji = zoneEmojis[index % zoneEmojis.length];
-                const iconClass = `icon-${(index % 8) + 1}`;
-
-                // Calculer la durée totale en secondes
                 const totalSeconds = (metric.dureeMaintenanceSeconds || 0) + (metric.dureeAdditionnelleSeconds || 0);
-                // Calculer le nombre d'occurrences (Maintenance uniquement)
-                const totalOccurrences = (metric.occurrencesMaintenance || 0);
-                // Calculer la durée moyenne par occurrence en minutes
-                const avgMinPerOccurrence = totalOccurrences > 0
-                    ? Math.round(totalSeconds / totalOccurrences / 60)
-                    : 0;
+                const totalOcc = (metric.occurrencesMaintenance || 0);
+                const avgMin = totalOcc > 0 ? Math.round(totalSeconds / totalOcc / 60) : 0;
 
                 tableHtml += `
                     <tr>
                         <td>
-                            <div style="display: flex; align-items: center;">
-                                <div class="zone-icon ${iconClass}">${emoji}</div>
-                                <div>
-                                    <div class="zone-name">${metric.zoneName}</div>
-                                    <div style="font-size: 0.8em; color: #999;">
-                                        ${metric.zoneId.split('/').pop()}
-                                    </div>
+                            <div class="cell-zone">
+                                <div class="cell-icon">
+                                    <i class="${getZoneIcon(index)}"></i>
+                                </div>
+                                <div class="cell-info">
+                                    <span style="font-weight: 500;">${metric.zoneName}</span>
+                                    <span class="cell-sub">${metric.zoneId.split('/').pop()}</span>
                                 </div>
                             </div>
                         </td>
-                        <td style="text-align: center;">
-                            <span class="badge badge-blue">${metric.occurrencesMaintenance || 0}</span>
+                        <td>
+                            <span class="badge badge-neutral">${metric.occurrencesMaintenance || 0}</span>
                         </td>
-                        <td style="text-align: center;">
-                            <span class="badge badge-purple">${metric.occurrencesAdditionnelles || 0}</span>
+                        <td>
+                            ${(metric.occurrencesAdditionnelles || 0) > 0
+                        ? `<span class="badge badge-warning">${metric.occurrencesAdditionnelles}</span>`
+                        : '<span style="color: var(--text-muted);">-</span>'}
                         </td>
-                        <td style="text-align: center; font-weight: bold; color: #06b6d4; font-size: 1.1em;">
+                        <td style="font-weight: 600; font-family: monospace;">
                             ${(metric.paxTotal || 0).toLocaleString('fr-FR')}
                         </td>
                         <td style="text-align: right;">
-                            <span class="badge badge-green">${avgMinPerOccurrence} min/occ</span>
+                            <span class="badge badge-success">${avgMin} min</span>
                         </td>
                     </tr>
                 `;
             });
 
-            tableHtml += `
-                    </tbody>
-                </table>
-            `;
-
+            tableHtml += `</tbody></table>`;
             document.getElementById('tableContent').innerHTML = tableHtml;
         }
 
