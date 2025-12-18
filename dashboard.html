@@ -82,15 +82,12 @@
         .brand {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 1rem;
         }
 
-        .brand-icon {
-            font-size: 1.5rem;
-            color: var(--primary);
-            background: rgba(37, 99, 235, 0.1);
-            padding: 0.5rem;
-            border-radius: 8px;
+        .brand img {
+            height: 40px;
+            width: auto;
         }
 
         .brand h1 {
@@ -98,6 +95,8 @@
             font-weight: 700;
             color: var(--text-main);
             letter-spacing: -0.025em;
+            padding-left: 1rem;
+            border-left: 1px solid var(--border);
         }
 
         .controls {
@@ -443,9 +442,7 @@
         <!-- Top Navigation -->
         <header class="header">
             <div class="brand">
-                <div class="brand-icon">
-                    <i class="ri-dashboard-3-line"></i>
-                </div>
+                <img src="img/atalian-LOGO.png" alt="Atalian Global Services">
                 <h1>Cleaning Analytics</h1>
             </div>
             <div class="controls">
@@ -726,6 +723,11 @@
                                 type: 'linear',
                                 display: true,
                                 position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Passagers',
+                                    font: { size: 12, weight: '600' }
+                                },
                                 grid: { color: '#f1f5f9' },
                                 ticks: { callback: v => v.toLocaleString('fr-FR') }
                             },
@@ -733,6 +735,11 @@
                                 type: 'linear',
                                 display: true,
                                 position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Heures',
+                                    font: { size: 12, weight: '600' }
+                                },
                                 grid: { display: false }
                             },
                             x: {
