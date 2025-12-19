@@ -206,26 +206,103 @@
             }
         }
 
+        // Animation Helper: Count Up
+        function animateValue(obj, start, end, duration, isFloat = false, suffix = '') {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                // EaseOutQuart
+                const easedProgress = 1 - Math.pow(1 - progress, 4);
+                const currentVal = progress * (end - start) + start;
+
+                if (isFloat) {
+                    obj.innerHTML = currentVal.toLocaleString('fr-FR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }) + suffix;
+                } else {
+                    obj.innerHTML = Math.floor(currentVal).toLocaleString('fr-FR') + suffix;
+                }
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    // Ensure final value is exact
+                    if (isFloat) {
+                        obj.innerHTML = end.toLocaleString('fr-FR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }) + suffix;
+                    } else {
+                        obj.innerHTML = end.toLocaleString('fr-FR') + suffix;
+                    }
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
         function renderStats(stats) {
+            // Configuration for each KPI
+            // isFloat: true if we want decimals
+            // suffix: e.g. 'h' for hours
             const kpiConfig = [
-                { label: 'Total Zones', value: stats.totalZones, icon: 'ri-map-pin-line' },
-                { label: 'Total Passagers', value: stats.totalPax.toLocaleString('fr-FR'), icon: 'ri-group-line' },
-                { label: 'Heures Maintenance', value: stats.totalMaintenanceHours.toLocaleString('fr-FR') + 'h', icon: 'ri-tools-line' },
-                { label: 'Heures Renfort', value: stats.totalAdditionnelleHours.toLocaleString('fr-FR') + 'h', icon: 'ri-time-line' }
+                {
+                    id: 'kpi-zones',
+                    label: 'Total Zones',
+                    value: stats.totalZones,
+                    icon: 'ri-map-pin-line',
+                    isFloat: false,
+                    suffix: ''
+                },
+                {
+                    id: 'kpi-pax',
+                    label: 'Total Passagers',
+                    value: stats.totalPax,
+                    icon: 'ri-group-line',
+                    isFloat: false,
+                    suffix: ''
+                },
+                {
+                    id: 'kpi-maint',
+                    label: 'Heures Maintenance',
+                    value: stats.totalMaintenanceHours,
+                    icon: 'ri-tools-line',
+                    isFloat: true,
+                    suffix: 'h'
+                },
+                {
+                    id: 'kpi-renfort',
+                    label: 'Heures Renfort',
+                    value: stats.totalAdditionnelleHours,
+                    icon: 'ri-time-line',
+                    isFloat: true,
+                    suffix: 'h'
+                }
             ];
 
+            // 1. Generate HTML
             const statsHtml = kpiConfig.map(kpi => `
                 <div class="stat-card">
                     <div class="stat-header">
                         <span class="stat-label">${kpi.label}</span>
                         <i class="${kpi.icon} stat-icon"></i>
                     </div>
-                    <div class="stat-value">${kpi.value}</div>
+                    <div class="stat-value" id="${kpi.id}">0${kpi.suffix}</div>
                 </div>
             `).join('');
 
             document.getElementById('statsGrid').innerHTML = statsHtml;
+
+            // 2. Trigger Animations
+            kpiConfig.forEach(kpi => {
+                const el = document.getElementById(kpi.id);
+                if (el) {
+                    animateValue(el, 0, kpi.value, 500, kpi.isFloat, kpi.suffix);
+                }
+            });
         }
+
 
         async function loadEvolutionChart() {
             try {
