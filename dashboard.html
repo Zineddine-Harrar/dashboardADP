@@ -50,12 +50,12 @@
         </header>
 
         <!-- KPI Grid -->
-        <div class="stats-grid" id="statsGrid">
+        <div class="stats-grid animate-enter" id="statsGrid" style="animation-delay: 100ms">
             <div class="loading-state">Chargement des données...</div>
         </div>
 
         <!-- Chart Section -->
-        <div class="card">
+        <div class="card animate-enter" style="animation-delay: 200ms">
             <div class="card-header">
                 <h2 class="card-title">Évolution Temporelle</h2>
             </div>
@@ -65,7 +65,7 @@
         </div>
 
         <!-- Data Table -->
-        <div class="card">
+        <div class="card animate-enter" style="animation-delay: 300ms">
             <div class="card-header">
                 <h2 class="card-title">Détail des Zones</h2>
             </div>
@@ -282,8 +282,8 @@
             ];
 
             // 1. Generate HTML
-            const statsHtml = kpiConfig.map(kpi => `
-                <div class="stat-card">
+            const statsHtml = kpiConfig.map((kpi, index) => `
+                <div class="stat-card animate-enter" style="animation-delay: ${index * 100}ms">
                     <div class="stat-header">
                         <span class="stat-label">${kpi.label}</span>
                         <i class="${kpi.icon} stat-icon"></i>
