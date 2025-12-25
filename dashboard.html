@@ -54,13 +54,60 @@
             <div class="loading-state">Chargement des données...</div>
         </div>
 
-        <!-- Chart Section -->
-        <div class="card animate-enter" style="animation-delay: 200ms">
-            <div class="card-header">
-                <h2 class="card-title">Évolution Temporelle</h2>
+        <!-- Charts Grid -->
+        <div class="charts-grid animate-enter" style="animation-delay: 200ms">
+            <!-- Chart 1: Passagers & Renfort -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Passagers & Renfort</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="zoneFilter1" class="chart-zone-filter" onchange="updateChart(1)">
+                            <option value="all">Toutes les zones</option>
+                        </select>
+                        <button class="btn btn-icon" onclick="openChartModal(1)" title="Agrandir">
+                            <i class="ri-fullscreen-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart1"></canvas>
+                </div>
             </div>
-            <div class="chart-wrapper">
-                <canvas id="evolutionChart"></canvas>
+
+            <!-- Chart 2: Passagers & Alertes -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Passagers & Alertes</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="zoneFilter2" class="chart-zone-filter" onchange="updateChart(2)">
+                            <option value="all">Toutes les zones</option>
+                        </select>
+                        <button class="btn btn-icon" onclick="openChartModal(2)" title="Agrandir">
+                            <i class="ri-fullscreen-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart2"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: Passagers & Maintenance -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Passagers & Maintenance</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="zoneFilter3" class="chart-zone-filter" onchange="updateChart(3)">
+                            <option value="all">Toutes les zones</option>
+                        </select>
+                        <button class="btn btn-icon" onclick="openChartModal(3)" title="Agrandir">
+                            <i class="ri-fullscreen-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart3"></canvas>
+                </div>
             </div>
         </div>
 
@@ -94,6 +141,21 @@
             </div>
         </div>
 
+        <!-- Fullscreen Chart Modal -->
+        <div id="chartModal" class="chart-modal" onclick="closeChartModal(event)">
+            <div class="chart-modal-content">
+                <div class="chart-modal-header">
+                    <h2 id="modalChartTitle">Graphique</h2>
+                    <button class="btn btn-icon" onclick="closeChartModal(event)" title="Fermer">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="chart-modal-body">
+                    <canvas id="modalChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <footer class="footer">
             <p>&copy; 2025 Atalian Global Services &bull; Dashboard Analytics</p>
         </footer>
@@ -123,12 +185,14 @@
         }
 
         function updateChartTheme(theme) {
-            if (evolutionChart) {
-                const isDark = theme === 'dark';
-                Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
-                evolutionChart.options.scales.y.grid.color = isDark ? '#334155' : '#f1f5f9';
-                evolutionChart.update();
-            }
+            const isDark = theme === 'dark';
+            Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+            [chart1, chart2, chart3].forEach(chart => {
+                if (chart && chart.options.scales.y) {
+                    chart.options.scales.y.grid.color = isDark ? '#334155' : '#f1f5f9';
+                    chart.update();
+                }
+            });
         }
 
         // Init Theme
@@ -151,8 +215,12 @@
 
         let availableDates = [];
         let currentDateIndex = 0;
-        let evolutionChart = null;
+        let chart1 = null;
+        let chart2 = null;
+        let chart3 = null;
         let allMetrics = [];
+        let allZones = [];
+        let allMetricsByDate = {};
         let sortColumn = null;
         let sortDirection = 'asc';
 
@@ -176,7 +244,7 @@
 
                 currentDateIndex = 0;
                 await loadDate(availableDates[0]);
-                await loadEvolutionChart();
+                await loadChartsData();
 
             } catch (error) {
                 console.error('Error loading dates:', error);
@@ -304,111 +372,255 @@
         }
 
 
-        async function loadEvolutionChart() {
+
+
+        // Load charts data with zone filtering
+        async function loadChartsData() {
             try {
-                const allStats = await Promise.all(
-                    availableDates.map(date =>
-                        fetch(`${API_URL}/metrics/stats/summary?date=${date}`)
-                            .then(r => r.json())
-                    )
+                // Load detailed metrics for each date
+                const metricsPromises = availableDates.map(date =>
+                    fetch(`${API_URL}/metrics?date=${date}`)
+                        .then(r => r.json())
+                        .then(data => ({ date, metrics: data.data }))
                 );
 
-                // Reverse for chronological order (Oldest -> Newest on the chart)
-                const chartStats = [...allStats].reverse();
-                const chartDates = availableDates.map(d =>
-                    new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                ).reverse();
+                const allData = await Promise.all(metricsPromises);
 
-                const ctx = document.getElementById('evolutionChart').getContext('2d');
+                // Organize data
+                allMetricsByDate = {};
+                const zonesSet = new Set();
 
-                // Professional Theme Colors
+                allData.forEach(({ date, metrics }) => {
+                    allMetricsByDate[date] = metrics;
+                    metrics.forEach(m => zonesSet.add(m.zoneName));
+                });
+
+                allZones = Array.from(zonesSet).sort();
+
+                // Populate zone filters
+                populateZoneFilters();
+
+                // Set Chart.js defaults
                 Chart.defaults.font.family = "'Inter', sans-serif";
                 Chart.defaults.color = '#64748b';
 
-                if (evolutionChart) evolutionChart.destroy();
+                // Create all charts
+                createChart1();
+                createChart2();
+                createChart3();
 
-                evolutionChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartDates,
-                        datasets: [
-                            {
-                                label: 'Passagers',
-                                data: chartStats.map(s => s.totalPax),
-                                borderColor: '#2563eb', // Primary Blue
-                                backgroundColor: 'rgba(37, 99, 235, 0.05)',
-                                tension: 0.3,
-                                borderWidth: 2,
-                                fill: true,
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: 'Maintenance (h)',
-                                data: chartStats.map(s => s.totalMaintenanceHours),
-                                borderColor: '#10b981', // Emerald
-                                borderDash: [5, 5],
-                                tension: 0.3,
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                yAxisID: 'y1'
-                            },
-                            {
-                                label: 'Renfort (h)',
-                                data: chartStats.map(s => s.totalAdditionnelleHours),
-                                borderColor: '#f59e0b', // Amber
-                                borderDash: [2, 2],
-                                tension: 0.3,
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                yAxisID: 'y1'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: { mode: 'index', intersect: false },
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                align: 'end',
-                                labels: { boxWidth: 10, usePointStyle: true }
-                            },
-                        },
-                        scales: {
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                                title: {
-                                    display: true,
-                                    text: 'Passagers',
-                                    font: { size: 12, weight: '600' }
-                                },
-                                grid: { color: '#f1f5f9' },
-                                ticks: { callback: v => v.toLocaleString('fr-FR') }
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-                                title: {
-                                    display: true,
-                                    text: 'Heures',
-                                    font: { size: 12, weight: '600' }
-                                },
-                                grid: { display: false }
-                            },
-                            x: {
-                                grid: { display: false }
-                            }
-                        }
-                    }
-                });
             } catch (error) {
-                console.error(error);
+                console.error('Error loading charts data:', error);
             }
         }
+
+        function populateZoneFilters() {
+            [1, 2, 3].forEach(chartNum => {
+                const select = document.getElementById(`zoneFilter${chartNum}`);
+                const zonesHtml = allZones.map(zone =>
+                    `<option value="${zone}">${zone}</option>`
+                ).join('');
+                select.innerHTML = '<option value="all">Toutes les zones</option>' + zonesHtml;
+            });
+        }
+
+        function getChartData(zoneFilter) {
+            const chartDates = availableDates.map(d =>
+                new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+            ).reverse();
+
+            const reversedDates = [...availableDates].reverse();
+
+            if (zoneFilter === 'all') {
+                // Aggregate all zones
+                const aggregated = reversedDates.map(date => {
+                    const metrics = allMetricsByDate[date] || [];
+                    return {
+                        totalPax: metrics.reduce((sum, m) => sum + (m.paxTotal || 0), 0),
+                        totalMaintenanceHours: metrics.reduce((sum, m) =>
+                            sum + ((m.dureeMaintenanceSeconds || 0) / 3600), 0),
+                        totalAdditionnelleHours: metrics.reduce((sum, m) =>
+                            sum + ((m.dureeAdditionnelleSeconds || 0) / 3600), 0),
+                        totalAlerts: metrics.reduce((sum, m) => sum + (m.alertWOs || 0), 0)
+                    };
+                });
+                return { dates: chartDates, data: aggregated };
+            } else {
+                // Filter for specific zone
+                const zoneData = reversedDates.map(date => {
+                    const metrics = allMetricsByDate[date] || [];
+                    const zoneMetric = metrics.find(m => m.zoneName === zoneFilter) || {};
+                    return {
+                        totalPax: zoneMetric.paxTotal || 0,
+                        totalMaintenanceHours: (zoneMetric.dureeMaintenanceSeconds || 0) / 3600,
+                        totalAdditionnelleHours: (zoneMetric.dureeAdditionnelleSeconds || 0) / 3600,
+                        totalAlerts: zoneMetric.alertWOs || 0
+                    };
+                });
+                return { dates: chartDates, data: zoneData };
+            }
+        }
+
+        function getChartOptions(yLabel, y1Label) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: { boxWidth: 10, usePointStyle: true }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: yLabel,
+                            font: { size: 12, weight: '600' }
+                        },
+                        grid: { color: '#f1f5f9' },
+                        ticks: { callback: v => v.toLocaleString('fr-FR') }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: y1Label,
+                            font: { size: 12, weight: '600' }
+                        },
+                        grid: { display: false },
+                        ticks: { callback: v => v.toLocaleString('fr-FR') }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            };
+        }
+
+        function createChart1() {
+            const ctx = document.getElementById('chart1').getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter1').value;
+            const { dates, data } = getChartData(zoneFilter);
+
+            if (chart1) chart1.destroy();
+
+            chart1 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Passagers',
+                            data: data.map(d => d.totalPax),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Renfort (h)',
+                            data: data.map(d => d.totalAdditionnelleHours.toFixed(2)),
+                            borderColor: '#f59e0b',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: getChartOptions('Passagers', 'Heures Renfort')
+            });
+        }
+
+        function createChart2() {
+            const ctx = document.getElementById('chart2').getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter2').value;
+            const { dates, data } = getChartData(zoneFilter);
+
+            if (chart2) chart2.destroy();
+
+            chart2 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Passagers',
+                            data: data.map(d => d.totalPax),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Alertes',
+                            data: data.map(d => d.totalAlerts),
+                            borderColor: '#ef4444',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: getChartOptions('Passagers', 'Alertes')
+            });
+        }
+
+        function createChart3() {
+            const ctx = document.getElementById('chart3').getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter3').value;
+            const { dates, data } = getChartData(zoneFilter);
+
+            if (chart3) chart3.destroy();
+
+            chart3 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Passagers',
+                            data: data.map(d => d.totalPax),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Maintenance (h)',
+                            data: data.map(d => d.totalMaintenanceHours.toFixed(2)),
+                            borderColor: '#10b981',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: getChartOptions('Passagers', 'Heures Maintenance')
+            });
+        }
+
+        function updateChart(chartNum) {
+            switch (chartNum) {
+                case 1: createChart1(); break;
+                case 2: createChart2(); break;
+                case 3: createChart3(); break;
+            }
+        }
+
 
         // Table & Filtering Logic
         function loadSelectedDate() {
@@ -428,6 +640,135 @@
             }
         }
 
+
+        // Modal functions
+        let modalChart = null;
+        let currentModalChartNum = null;
+
+        function openChartModal(chartNum) {
+            const modal = document.getElementById('chartModal');
+            const modalTitle = document.getElementById('modalChartTitle');
+            const zoneFilter = document.getElementById(`zoneFilter${chartNum}`).value;
+
+            // Set title based on chart number
+            const titles = {
+                1: 'Passagers & Renfort',
+                2: 'Passagers & Alertes',
+                3: 'Passagers & Maintenance'
+            };
+            modalTitle.textContent = titles[chartNum];
+
+            // Show modal
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Store current chart number
+            currentModalChartNum = chartNum;
+
+            // Create chart in modal
+            setTimeout(() => {
+                createModalChart(chartNum, zoneFilter);
+            }, 100);
+        }
+
+        function closeChartModal(event) {
+            if (event) {
+                // Only close if clicking on backdrop or close button
+                if (event.target.id !== 'chartModal' && !event.target.closest('.ri-close-line')) {
+                    return;
+                }
+                event.stopPropagation();
+            }
+
+            const modal = document.getElementById('chartModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+
+            // Destroy modal chart
+            if (modalChart) {
+                modalChart.destroy();
+                modalChart = null;
+            }
+        }
+
+        function createModalChart(chartNum, zoneFilter) {
+            const canvas = document.getElementById('modalChart');
+            const container = canvas.parentElement;
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas dimensions based on container
+            canvas.width = container.clientWidth - 64; // padding
+            canvas.height = container.clientHeight - 64;
+
+            const { dates, data } = getChartData(zoneFilter);
+
+            if (modalChart) modalChart.destroy();
+
+            const chartConfigs = {
+                1: {
+                    label2: 'Renfort (h)',
+                    data2: data.map(d => d.totalAdditionnelleHours.toFixed(2)),
+                    color2: '#f59e0b',
+                    y1Label: 'Heures Renfort'
+                },
+                2: {
+                    label2: 'Alertes',
+                    data2: data.map(d => d.totalAlerts),
+                    color2: '#ef4444',
+                    y1Label: 'Alertes'
+                },
+                3: {
+                    label2: 'Maintenance (h)',
+                    data2: data.map(d => d.totalMaintenanceHours.toFixed(2)),
+                    color2: '#10b981',
+                    y1Label: 'Heures Maintenance'
+                }
+            };
+
+            const config = chartConfigs[chartNum];
+
+            modalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Passagers',
+                            data: data.map(d => d.totalPax),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: config.label2,
+                            data: config.data2,
+                            borderColor: config.color2,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    ...getChartOptions('Passagers', config.y1Label),
+                    maintainAspectRatio: true,
+                    aspectRatio: 2.5
+                }
+            });
+        }
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('chartModal').classList.contains('active')) {
+                closeChartModal();
+            }
+        });
+
+
+        // Table & Filtering Logic
         function applyFiltersAndSort() {
             const searchTerm = document.getElementById('searchZone').value.toLowerCase();
             const rowLimit = document.getElementById('rowLimit').value;
@@ -444,6 +785,7 @@
                         case 'zone': aVal = a.zoneName.toLowerCase(); bVal = b.zoneName.toLowerCase(); break;
                         case 'maintenance': aVal = a.occurrencesMaintenance || 0; bVal = b.occurrencesMaintenance || 0; break;
                         case 'additionnelles': aVal = a.occurrencesAdditionnelles || 0; bVal = b.occurrencesAdditionnelles || 0; break;
+                        case 'alertes': aVal = a.alertWOs || 0; bVal = b.alertWOs || 0; break;
                         case 'pax': aVal = a.paxTotal || 0; bVal = b.paxTotal || 0; break;
                         case 'duree':
                             const aT = (a.dureeMaintenanceSeconds || 0) + (a.dureeAdditionnelleSeconds || 0);
@@ -485,6 +827,7 @@
                             <th onclick="sortBy('zone')">Zone <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                             <th onclick="sortBy('maintenance')">Occurrences <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                             <th onclick="sortBy('additionnelles')">Additionnelles <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('alertes')">Alertes <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                             <th onclick="sortBy('pax')">Passagers <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                             <th onclick="sortBy('duree')" style="text-align: right;">Durée Moy. <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                         </tr>
@@ -516,6 +859,11 @@
                         <td>
                             ${(metric.occurrencesAdditionnelles || 0) > 0
                         ? `<span class="badge badge-warning">${metric.occurrencesAdditionnelles}</span>`
+                        : '<span style="color: var(--text-muted);">-</span>'}
+                        </td>
+                        <td>
+                            ${(metric.alertWOs || 0) > 0
+                        ? `<span class="badge badge-danger">${metric.alertWOs}</span>`
                         : '<span style="color: var(--text-muted);">-</span>'}
                         </td>
                         <td style="font-weight: 600; font-family: monospace;">

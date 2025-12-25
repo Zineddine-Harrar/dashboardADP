@@ -7,6 +7,7 @@ export interface ZoneKpiData {
     zoneId: string;
     maintenanceOccurrences: number;
     reinforcementOccurrences: number;
+    alertWOs: number;
 }
 
 interface ZoneKpiRow {
@@ -46,6 +47,7 @@ export class ZoneKpiParser {
                 zoneId: row['zone.id'],
                 maintenanceOccurrences: parsed.maintenanceOccurrences,
                 reinforcementOccurrences: parsed.reinforcementOccurrences,
+                alertWOs: parsed.alertWOs,
             });
         }
 

@@ -22,6 +22,7 @@ model DailyZoneCleaningMetrics {
   // Occurrences from visitBoundsExplanation parsing
   occurrencesMaintenance     Int?     @default(0)
   occurrencesAdditionnelles  Int?     @default(0)
+  alertWOs                   Int?     @default(0)
   
   // PAX (passenger) metrics
   paxTotal                   Int?     @default(0)

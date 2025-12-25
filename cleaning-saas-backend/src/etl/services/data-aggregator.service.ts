@@ -9,6 +9,7 @@ export interface AggregatedZoneMetrics {
     zoneName: string;
     occurrencesMaintenance: number;
     occurrencesAdditionnelles: number;
+    alertWOs: number;
     paxTotal: number;
     dureeMaintenanceSeconds: number;
     dureeAdditionnelleSeconds: number;
@@ -53,6 +54,7 @@ export class DataAggregatorService {
                 zoneName: zoneData.name,
                 occurrencesMaintenance: kpi?.maintenanceOccurrences || 0,
                 occurrencesAdditionnelles: kpi?.reinforcementOccurrences || 0,
+                alertWOs: kpi?.alertWOs || 0,
                 paxTotal: pax,
                 dureeMaintenanceSeconds,
                 dureeAdditionnelleSeconds,

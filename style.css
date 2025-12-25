@@ -144,6 +144,87 @@ select:focus {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+/* Button Icon */
+.btn-icon {
+    padding: 0.5rem;
+    min-width: auto;
+}
+
+/* Chart Modal */
+.chart-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+}
+
+.chart-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-modal-content {
+    background: var(--bg-card);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 1400px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.chart-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.chart-modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.chart-modal-body {
+    flex: 1;
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+}
+
+.chart-modal-body canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+}
+
 /* Stats Grid - Fixed Responsiveness */
 .stats-grid {
     display: grid;
@@ -230,6 +311,31 @@ select:focus {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-main);
+}
+
+/* Charts Grid - Responsive */
+.charts-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+@media (min-width: 1400px) {
+    .charts-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-zone-filter {
+    max-width: 200px;
+    font-size: 0.875rem;
 }
 
 .chart-wrapper {
@@ -398,6 +504,11 @@ select:focus {
     color: #b45309;
 }
 
+.badge-danger {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
 /* Dark mode badges */
 [data-theme="dark"] .badge-neutral {
     background: #334155;
@@ -417,6 +528,11 @@ select:focus {
 [data-theme="dark"] .badge-warning {
     background: rgba(245, 158, 11, 0.2);
     color: #fcd34d;
+}
+
+[data-theme="dark"] .badge-danger {
+    background: rgba(220, 38, 38, 0.2);
+    color: #fca5a5;
 }
 
 /* Animations */
