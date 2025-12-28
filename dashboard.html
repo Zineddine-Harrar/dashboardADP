@@ -156,6 +156,31 @@
             </div>
         </div>
 
+        <!-- Chatbot Test Widget -->
+        <div id="chatbotTest" class="chatbot-test-widget">
+            <div class="chatbot-test-header">
+                <h3>🤖 Test Chatbot Ollama</h3>
+                <button onclick="toggleChatbotTest()" class="btn btn-icon">
+                    <i id="chatbotTestIcon" class="ri-arrow-down-s-line"></i>
+                </button>
+            </div>
+            <div id="chatbotTestBody" class="chatbot-test-body">
+                <div id="chatbotMessages" class="chatbot-messages">
+                    <div class="chatbot-message assistant">
+                        Bonjour ! Je suis votre assistant d'analyse de données. Posez-moi des questions sur vos
+                        métriques de nettoyage !
+                    </div>
+                </div>
+                <div class="chatbot-input-group">
+                    <input type="text" id="chatbotInput" placeholder="Ex: Quelle zone a le plus d'alertes ?"
+                        onkeypress="if(event.key==='Enter') sendChatMessage()" />
+                    <button onclick="sendChatMessage()" class="btn btn-primary">
+                        <i class="ri-send-plane-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <footer class="footer">
             <p>&copy; 2025 Atalian Global Services &bull; Dashboard Analytics</p>
         </footer>
@@ -880,8 +905,90 @@
             document.getElementById('tableContent').innerHTML = tableHtml;
         }
 
+        // Chatbot Functions
+        function toggleChatbotTest() {
+            const body = document.getElementById('chatbotTestBody');
+            const icon = document.getElementById('chatbotTestIcon');
+
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                icon.className = 'ri-arrow-down-s-line';
+            } else {
+                body.style.display = 'none';
+                icon.className = 'ri-arrow-right-s-line';
+            }
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatbotInput');
+            const question = input.value.trim();
+
+            if (!question) return;
+
+            // Afficher la question de l'utilisateur
+            addChatMessage(question, 'user');
+            input.value = '';
+
+            // Afficher l'indicateur de typing
+            addTypingIndicator();
+
+            try {
+                const response = await fetch(`${API_URL}/chat/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question,
+                        date: availableDates[currentDateIndex]
+                    })
+                });
+
+                const data = await response.json();
+
+                // Retirer l'indicateur de typing
+                removeTypingIndicator();
+
+                if (data.success) {
+                    addChatMessage(data.response, 'assistant', data.logId);
+                } else {
+                    addChatMessage(`Erreur : ${data.error}`, 'error');
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                addChatMessage('Impossible de contacter le serveur. Assurez-vous qu\'Ollama est démarré.', 'error');
+            }
+        }
+
+        function addChatMessage(text, type) {
+            const messagesDiv = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chatbot-message ${type}`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+
+            // Scroll vers le bas
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const messagesDiv = document.getElementById('chatbotMessages');
+            const typing = document.createElement('div');
+            typing.id = 'typingIndicator';
+            typing.className = 'chatbot-message assistant typing';
+            typing.innerHTML = '<span>⏳</span> Réflexion en cours...';
+            messagesDiv.appendChild(typing);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
         loadAvailableDates();
     </script>
+    <script src="chatbot-feedback-fix.js"></script>
 </body>
 
 </html>

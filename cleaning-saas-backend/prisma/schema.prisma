@@ -44,3 +44,34 @@ model DailyZoneCleaningMetrics {
   
   @@map("daily_zone_cleaning_metrics")
 }
+
+/// Chat interaction logs for analytics and improvement
+model ChatLog {
+  id                Int      @id @default(autoincrement())
+  
+  // Question and response
+  question          String   @db.Text
+  response          String?  @db.Text
+  
+  // Performance metrics
+  responseTimeMs    Int?
+  success           Boolean  @default(true)
+  errorMessage      String?  @db.Text
+  
+  // Context
+  dateContext       DateTime? @db.Date
+  
+  // User feedback
+  userFeedback      Int?     // 1 = 👍, -1 = 👎, null = pas encore noté
+  feedbackDate      DateTime?
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  
+  // Index for analytics queries
+  @@index([createdAt])
+  @@index([success])
+  @@index([userFeedback])
+  
+  @@map("chat_logs")
+}

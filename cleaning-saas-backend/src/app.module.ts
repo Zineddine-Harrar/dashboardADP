@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { EtlModule } from './etl/etl.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
 import { UploadController } from './api/upload.controller';
 
 /**
@@ -20,6 +21,7 @@ import { UploadController } from './api/upload.controller';
         DatabaseModule,
         EtlModule,
         MetricsModule,
+        ChatbotModule,
     ],
     controllers: [UploadController],
 })
