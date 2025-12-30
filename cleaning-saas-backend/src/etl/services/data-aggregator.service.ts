@@ -13,6 +13,8 @@ export interface AggregatedZoneMetrics {
     paxTotal: number;
     dureeMaintenanceSeconds: number;
     dureeAdditionnelleSeconds: number;
+    dureeAlertesSeconds: number;
+    dureeSpecificSeconds: number;
     minVisits: number;
     maxVisits: number;
     nbVisits: number;
@@ -50,6 +52,9 @@ export class DataAggregatorService {
 
             const dureeMaintenanceSeconds = demandForZone?.get('ENTRETIEN') || 0;
             const dureeAdditionnelleSeconds = demandForZone?.get('RENFORT') || 0;
+            // STRICT: Only use ALERTE category as requested. Ignore SPM.
+            const dureeAlertesSeconds = demandForZone?.get('ALERTE') || 0;
+            const dureeSpecificSeconds = demandForZone?.get('SPECIFIQUE') || 0;
 
             results.push({
                 date: globalParam.date,
@@ -61,6 +66,8 @@ export class DataAggregatorService {
                 paxTotal: pax,
                 dureeMaintenanceSeconds,
                 dureeAdditionnelleSeconds,
+                dureeAlertesSeconds,
+                dureeSpecificSeconds,
                 minVisits: kpi?.minVisits || 0,
                 maxVisits: kpi?.maxVisits || 0,
                 nbVisits: kpi?.nbVisits || 0,

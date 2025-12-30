@@ -30,6 +30,8 @@ model DailyZoneCleaningMetrics {
   // Duration metrics in seconds
   dureeMaintenanceSeconds    Int?     @default(0)
   dureeAdditionnelleSeconds  Int?     @default(0)
+  dureeAlertesSeconds        Int?     @default(0) // For Alerts (ALERTE/SPM)
+  dureeSpecificSeconds       Int?     @default(0) // For Specific tasks
   
   // Visit tracking (from ZoneKpi sheet)
   minVisits                  Int?     @default(0)

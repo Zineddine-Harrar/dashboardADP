@@ -1,0 +1,8 @@
+[
+  "ENTRETIEN",
+  "RENFORT",
+  "SPM",
+  "PERIODIQUE",
+  "SPECIFIQUE",
+  "ALERTE"
+]

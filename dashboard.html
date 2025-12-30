@@ -810,6 +810,8 @@
                         case 'maintenance': aVal = a.occurrencesMaintenance || 0; bVal = b.occurrencesMaintenance || 0; break;
                         case 'additionnelles': aVal = a.occurrencesAdditionnelles || 0; bVal = b.occurrencesAdditionnelles || 0; break;
                         case 'alertes': aVal = a.alertWOs || 0; bVal = b.alertWOs || 0; break;
+                        case 'dureeAlertes': aVal = a.dureeAlertesSeconds || 0; bVal = b.dureeAlertesSeconds || 0; break;
+                        case 'dureeSpecific': aVal = a.dureeSpecificSeconds || 0; bVal = b.dureeSpecificSeconds || 0; break;
                         case 'pax': aVal = a.paxTotal || 0; bVal = b.paxTotal || 0; break;
                         case 'duree':
                             const aT = (a.dureeMaintenanceSeconds || 0) + (a.dureeAdditionnelleSeconds || 0);
@@ -852,7 +854,9 @@
                         <th onclick="sortBy('visites')" style="border-right: 1px solid var(--border);">Visites (Réel / Prévu) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                         <th onclick="sortBy('maintenance')">Occurrences <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                         <th onclick="sortBy('additionnelles')">Additionnelles <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('alertes')">Alertes <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('alertes')">Alertes (Qté) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('dureeAlertes')">Alertes (Tps) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('dureeSpecific')">Spécifique (Tps) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                         <th onclick="sortBy('pax')">Passagers <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                         <th onclick="sortBy('duree')" style="text-align: right;">Durée Moy. <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
                     </tr>
@@ -864,6 +868,10 @@
                 const totalSeconds = (metric.dureeMaintenanceSeconds || 0) + (metric.dureeAdditionnelleSeconds || 0);
                 const totalOcc = (metric.occurrencesMaintenance || 0);
                 const avgMin = totalOcc > 0 ? Math.round(totalSeconds / totalOcc / 60) : 0;
+
+                // Duration formatters
+                const alertesMin = Math.round((metric.dureeAlertesSeconds || 0) / 60);
+                const specMin = Math.round((metric.dureeSpecificSeconds || 0) / 60);
 
                 // Logic for visits column
                 const nbVisits = metric.nbVisits || 0;
@@ -910,6 +918,12 @@
                             ${(metric.alertWOs || 0) > 0
                         ? `<span class="badge badge-danger">${metric.alertWOs}</span>`
                         : '<span style="color: var(--text-muted);">-</span>'}
+                        </td>
+                        <td>
+                             ${alertesMin > 0 ? `<span class="badge badge-neutral">${alertesMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}
+                        </td>
+                        <td>
+                             ${specMin > 0 ? `<span class="badge badge-neutral">${specMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}
                         </td>
                         <td style="font-weight: 600; font-family: monospace;">
                             ${(metric.paxTotal || 0).toLocaleString('fr-FR')}
