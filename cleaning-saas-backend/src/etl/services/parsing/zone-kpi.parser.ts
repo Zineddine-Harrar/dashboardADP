@@ -8,6 +8,9 @@ export interface ZoneKpiData {
     maintenanceOccurrences: number;
     reinforcementOccurrences: number;
     alertWOs: number;
+    minVisits: number;
+    maxVisits: number;
+    nbVisits: number;
 }
 
 interface ZoneKpiRow {
@@ -48,6 +51,9 @@ export class ZoneKpiParser {
                 maintenanceOccurrences: parsed.maintenanceOccurrences,
                 reinforcementOccurrences: parsed.reinforcementOccurrences,
                 alertWOs: parsed.alertWOs,
+                minVisits: row.minVisits || 0,
+                maxVisits: row.maxVisits || 0,
+                nbVisits: row.nbVisits || 0,
             });
         }
 

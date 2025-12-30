@@ -13,6 +13,9 @@ export interface AggregatedZoneMetrics {
     paxTotal: number;
     dureeMaintenanceSeconds: number;
     dureeAdditionnelleSeconds: number;
+    minVisits: number;
+    maxVisits: number;
+    nbVisits: number;
 }
 
 /**
@@ -58,6 +61,9 @@ export class DataAggregatorService {
                 paxTotal: pax,
                 dureeMaintenanceSeconds,
                 dureeAdditionnelleSeconds,
+                minVisits: kpi?.minVisits || 0,
+                maxVisits: kpi?.maxVisits || 0,
+                nbVisits: kpi?.nbVisits || 0,
             });
         }
 
