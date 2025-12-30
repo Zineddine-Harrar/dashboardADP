@@ -307,19 +307,10 @@ export class ChatbotService {
                     const maintenanceMin = Math.round((m.dureeMaintenanceSeconds || 0) / 60);
                     const renfortMin = Math.round((m.dureeAdditionnelleSeconds || 0) / 60);
                     const totalOccurrences = (m.occurrencesMaintenance || 0) + (m.occurrencesAdditionnelles || 0);
-
-                    // Calculer les MOYENNES par occurrence
-                    const maintenanceAvg = m.occurrencesMaintenance > 0
-                        ? Math.round(maintenanceMin / m.occurrencesMaintenance)
-                        : 0;
-                    const renfortAvg = m.occurrencesAdditionnelles > 0
-                        ? Math.round(renfortMin / m.occurrencesAdditionnelles)
-                        : 0;
-
                     return `- ${m.zoneName}:
   → Occurrences totales: ${totalOccurrences} (${m.occurrencesMaintenance || 0} maintenance + ${m.occurrencesAdditionnelles || 0} additionnelles)
-  → Maintenance: ${maintenanceMin} min au total (moyenne: ${maintenanceAvg} min/occurrence)
-  → Renfort: ${renfortMin} min au total (moyenne: ${renfortAvg} min/occurrence)
+  → Maintenance: ${maintenanceMin} min
+  → Renfort: ${renfortMin} min
   → Passagers: ${m.paxTotal}
   → Alertes: ${m.alertWOs || 0}`;
                 })
@@ -382,36 +373,24 @@ export class ChatbotService {
 
     private async callOpenAI(prompt: string): Promise<string> {
         try {
-            const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
+            const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
             if (!OPENAI_API_KEY) {
-                throw new Error('OPENAI_API_KEY ou OPENROUTER_API_KEY not configured in environment variables');
+                throw new Error('OPENAI_API_KEY not configured in environment variables');
             }
 
-            // Utiliser OpenRouter avec xiaomi/mimo-v2-flash:free (GRATUIT)
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                    'HTTP-Referer': 'http://localhost:3001',
-                    'X-Title': 'DATALIAN Chatbot',
                 },
                 body: JSON.stringify({
-                    model: 'meta-llama/llama-3.3-70b-instruct:free', // Llama 3.3 70B GRATUIT (meilleur modèle)
+                    model: 'gpt-4o-mini', // 20x moins cher que gpt-4o, toujours excellent
                     messages: [
                         {
                             role: 'system',
-                            content: `Tu es un assistant analytique spécialisé dans les données de nettoyage aéroportuaire. Réponds de manière précise et concise en français.
-
-RÈGLES IMPORTANTES POUR LES CALCULS :
-1. MOYENNE = Somme ÷ Nombre d'occurrences
-   - Exemple: Si une zone a 4 occurrences avec 229 minutes au total, la moyenne est 229 ÷ 4 = 57.25 minutes
-2. Ne confonds JAMAIS la somme totale avec la moyenne
-3. Quand on te demande une "durée moyenne", calcule TOUJOURS : durée_totale ÷ nombre_occurrences
-4. Vérifie tes calculs avant de répondre
-5. Si les données montrent une "durée moyenne" déjà calculée dans le contexte, utilise cette valeur
-6. Sinon, calcule-la toi-même en divisant la durée totale par le nombre d'occurrences`
+                            content: 'Tu es un assistant analytique spécialisé dans les données de nettoyage aéroportuaire. Réponds de manière précise et concise en français.'
                         },
                         {
                             role: 'user',
@@ -420,7 +399,6 @@ RÈGLES IMPORTANTES POUR LES CALCULS :
                     ],
                     temperature: 0.2,
                     max_tokens: 500,
-                    reasoning: { enabled: true }
                 }),
             });
 
