@@ -18,6 +18,8 @@
 </head>
 
 <body>
+
+
     <div class="layout">
         <!-- Top Navigation -->
         <header class="header">
@@ -32,14 +34,36 @@
                 </button>
                 <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
 
-                <button class="btn" onclick="navigateDate(1)">
-                    <i class="ri-arrow-left-s-line"></i>
-                </button>
-                <select id="dateSelector" onchange="loadSelectedDate()">
-                    <option value="">Chargement...</option>
-                </select>
-                <button class="btn" onclick="navigateDate(-1)">
+                <div class="view-mode-switch"
+                    style="display: flex; gap: 1rem; margin-right: 1rem; align-items: center; background: var(--bg-body); padding: 0.25rem 0.75rem; border-radius: 8px; border: 1px solid var(--border);">
+                    <label
+                        style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer; font-size: 0.875rem;">
+                        <input type="radio" name="viewMode" value="day" checked onchange="switchViewMode()">
+                        Jour
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer; font-size: 0.875rem;">
+                        <input type="radio" name="viewMode" value="week" onchange="switchViewMode()">
+                        Semaine
+                    </label>
+                </div>
+
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+
+                <button class="btn" onclick="navigate(-1)">
                     <i class="ri-arrow-right-s-line"></i>
+                </button>
+
+                <div id="dateControlContainer" style="display:inline-block;">
+                    <select id="dateSelector" onchange="loadSelectedDate()"></select>
+                </div>
+
+                <div id="weekControlContainer" style="display:none;">
+                    <select id="weekSelector" onchange="loadSelectedWeek()"></select>
+                </div>
+
+                <button class="btn" onclick="navigate(1)">
+                    <i class="ri-arrow-left-s-line"></i>
                 </button>
                 <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
                 <button class="btn btn-primary" onclick="window.location.href='upload.html'">
@@ -49,9 +73,14 @@
             </div>
         </header>
 
+        <!-- Loading Overlay (Persistent) -->
+        <div id="globalLoading" class="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <span>Chargement des données...</span>
+        </div>
+
         <!-- KPI Grid -->
         <div class="stats-grid animate-enter" id="statsGrid" style="animation-delay: 100ms">
-            <div class="loading-state">Chargement des données...</div>
         </div>
 
         <!-- Charts Grid -->
@@ -215,42 +244,337 @@
 
         let availableDates = [];
         let currentDateIndex = 0;
+
+        // Week View Vars
+        let weeks = [];
+        let currentWeekIndex = 0;
+        let currentWeekMetrics = {}; // Map: date -> metrics[] for charts scope
+
         let chart1 = null;
         let chart2 = null;
         let chart3 = null;
+
         let allMetrics = [];
         let allZones = [];
-        let allMetricsByDate = {};
+        let allMetricsByDate = {}; // Legacy global, kept if needed but scoped logic preferred
         let sortColumn = null;
         let sortDirection = 'asc';
+
+        // Chatbot History
+        let chatHistory = [];
+
+        // Helper to safely toggle loading state
+        function setLoading(isVisible) {
+            const el = document.getElementById('globalLoading');
+            if (el) el.style.display = isVisible ? 'flex' : 'none';
+        }
 
         // Initialize
         async function loadAvailableDates() {
             try {
                 const response = await fetch(`${API_URL}/metrics/dates/available`);
+                if (!response.ok) throw new Error(`Status: ${response.status}`);
                 const data = await response.json();
-                availableDates = data.dates;
+                availableDates = data.dates || [];
 
+                if (availableDates.length === 0) {
+                    document.getElementById('statsGrid').innerHTML =
+                        '<div class="error-state"><i class="ri-error-warning-line"></i> Aucune donnée disponible</div>';
+                    return;
+                }
+
+                // Populate Date Selector
                 const selector = document.getElementById('dateSelector');
                 selector.innerHTML = availableDates.map((date, index) => {
                     const dateObj = new Date(date);
                     const formatted = dateObj.toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
+                        day: 'numeric', month: 'long', year: 'numeric'
                     });
                     return `<option value="${index}">${formatted}</option>`;
                 }).join('');
 
                 currentDateIndex = 0;
-                await loadDate(availableDates[0]);
-                await loadChartsData();
+
+                // Init Weeks (populates week selector)
+                initWeeks();
+
+                // Select Day Mode by Default (checked in HTML)
+                // We call switchViewMode but we DON'T let it trigger loading during init
+                // We will handle the initial load explicitly below.
+                const mode = document.querySelector('input[name="viewMode"]:checked').value;
+                const isWeek = mode === 'week';
+
+                // Set UI state based on mode
+                document.getElementById('dateControlContainer').style.display = isWeek ? 'none' : 'inline-block';
+                document.getElementById('weekControlContainer').style.display = isWeek ? 'inline-block' : 'none';
+                document.querySelector('.charts-grid').style.display = isWeek ? 'grid' : 'none';
+
+                // Initial Load
+                if (isWeek) {
+                    await loadSelectedWeek();
+                } else {
+                    await loadSelectedDate();
+                }
 
             } catch (error) {
                 console.error('Error loading dates:', error);
                 document.getElementById('statsGrid').innerHTML =
-                    '<div class="error-state"><i class="ri-error-warning-line"></i> Connexion au serveur échouée</div>';
+                    `<div class="error-state"><i class="ri-error-warning-line"></i> Connexion au serveur échouée (${error.message})</div>`;
             }
+        }
+
+        function initWeeks() {
+            const weekMap = new Map();
+            availableDates.forEach(dateStr => {
+                const d = new Date(dateStr);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day == 0 ? -6 : 1); // Monday
+                const monday = new Date(d);
+                monday.setDate(diff);
+                const key = monday.toISOString().split('T')[0];
+
+                if (!weekMap.has(key)) weekMap.set(key, []);
+                weekMap.get(key).push(dateStr);
+            });
+
+            weeks = Array.from(weekMap.entries())
+                .sort((a, b) => a[0].localeCompare(b[0])) // Ascending Date
+                .reverse() // Newest first for selector? User usually wants recent. Let's keep DESC like dates.
+                .map(([monday, dates]) => {
+                    const d = new Date(monday);
+                    const label = `Semaine du ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+                    return { label, dates, mondayKey: monday };
+                });
+
+            const sel = document.getElementById('weekSelector');
+            sel.innerHTML = weeks.map((w, i) => `<option value="${i}">${w.label}</option>`).join('');
+            currentWeekIndex = 0; // Default to first (newest)
+        }
+
+        function switchViewMode() {
+            const mode = document.querySelector('input[name="viewMode"]:checked').value;
+            const isWeek = mode === 'week';
+
+            // Toggle Controls
+            document.getElementById('dateControlContainer').style.display = isWeek ? 'none' : 'inline-block';
+            document.getElementById('weekControlContainer').style.display = isWeek ? 'inline-block' : 'none';
+
+            // Toggle Logic
+            const chartsGrid = document.querySelector('.charts-grid');
+            const statsGrid = document.getElementById('statsGrid');
+
+            if (isWeek) {
+                // WEEK MODE: Show Graphs, Hide Day Stats (optional, maybe show week stats?)
+                // User said: "semaine quand il est coché la semaine qui a été choisi va s'afficher avec les graphs"
+                chartsGrid.style.display = 'grid';
+                // We keep StatsGrid but populate it with Week aggregated stats? Or hide?
+                // User didn't say. But Day Stats for a week is confusing. 
+                // I'll render Week Stats in the same grid.
+
+                loadSelectedWeek();
+            } else {
+                // DAY MODE: Hide Graphs
+                // User said: "quand le mode jour est coché il ne faut pas affiché les graphes"
+                chartsGrid.style.display = 'none';
+
+                loadSelectedDate();
+            }
+        }
+
+        function navigate(direction) {
+            const mode = document.querySelector('input[name="viewMode"]:checked').value;
+            if (mode === 'week') {
+                const nextIndex = currentWeekIndex - direction; // Invert direction for intuitive 
+                if (nextIndex >= 0 && nextIndex < weeks.length) {
+                    currentWeekIndex = nextIndex;
+                    document.getElementById('weekSelector').value = currentWeekIndex;
+                    loadSelectedWeek();
+                }
+            } else {
+                // Day Mode
+                const nextIndex = currentDateIndex - direction;
+                if (nextIndex >= 0 && nextIndex < availableDates.length) {
+                    currentDateIndex = nextIndex;
+                    document.getElementById('dateSelector').value = currentDateIndex;
+                    loadSelectedDate();
+                }
+            }
+        }
+
+        async function loadSelectedDate() {
+            const index = parseInt(document.getElementById('dateSelector').value);
+            currentDateIndex = index;
+            const date = availableDates[index];
+            if (!date) return;
+
+            // Show loading
+            setLoading(true);
+            try {
+                await loadDate(date);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function loadSelectedWeek() {
+            const index = parseInt(document.getElementById('weekSelector').value);
+            currentWeekIndex = index;
+            const week = weeks[index];
+            if (!week) return;
+
+            // Show loading
+            setLoading(true);
+
+            // Fetch Data for all days
+            try {
+                const promises = week.dates.map(date =>
+                    fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                );
+
+                // metricsRes array
+                const metricsWrappers = await Promise.all(promises);
+
+                // Filter out failed wrappers and extract data
+                const dailyMetricsArrays = metricsWrappers
+                    .filter(w => w && w.data && Array.isArray(w.data))
+                    .map(w => w.data);
+
+                if (dailyMetricsArrays.length === 0) {
+                    throw new Error("Aucune donnée disponible pour cette semaine.");
+                }
+
+                // Process Aggregation
+                allMetrics = aggregateWeekData(dailyMetricsArrays);
+
+                // Render Table with Aggregated Metrics
+                allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
+                populateZoneFilters();
+
+                // Render Stats Header (Week Summary)
+                const weekStats = calculateWeekStats(allMetrics);
+                renderStats(weekStats);
+
+                // Render Charts
+                const weekMetricsMap = {};
+                // Map only the dates we actually got data for
+                week.dates.forEach((d, i) => {
+                    if (metricsWrappers[i] && metricsWrappers[i].data) {
+                        weekMetricsMap[d] = metricsWrappers[i].data;
+                    }
+                });
+                renderChartsForWeek(week.dates, weekMetricsMap);
+
+                applyFiltersAndSort(); // Refresh table
+
+            } catch (e) {
+                console.error("Error loading week", e);
+                document.getElementById('statsGrid').innerHTML =
+                    `<div class="error-state"><i class="ri-error-warning-line"></i> ${e.message || "Erreur lors du chargement de la semaine"}</div>`;
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function aggregateWeekData(dailyArrays) {
+            // Flatten first to get all occurrences
+            const flat = dailyArrays.flat();
+            const zoneMap = {};
+
+            flat.forEach(m => {
+                if (!zoneMap[m.zoneName]) {
+                    zoneMap[m.zoneName] = { ...m };
+                    // Reset accumulators
+                    zoneMap[m.zoneName].nbVisits = 0; // Will sum then avg
+                    zoneMap[m.zoneName].dureeMaintenanceSeconds = 0;
+                    zoneMap[m.zoneName].dureeAdditionnelleSeconds = 0;
+                    zoneMap[m.zoneName].dureeAlertesSeconds = 0;
+                    zoneMap[m.zoneName].dureeSpecificSeconds = 0;
+                    zoneMap[m.zoneName].paxTotal = 0;
+                    zoneMap[m.zoneName].maxVisits = 0;
+                    zoneMap[m.zoneName].occurrencesMaintenance = 0;
+                    zoneMap[m.zoneName].occurrencesAdditionnelles = 0;
+                    zoneMap[m.zoneName].alertWOs = 0;
+                    zoneMap[m.zoneName].daysCount = 0;
+                }
+
+                const Z = zoneMap[m.zoneName];
+                Z.nbVisits += (m.nbVisits || 0); // Accumulate for now
+                Z.daysCount++;
+
+                Z.dureeMaintenanceSeconds += (m.dureeMaintenanceSeconds || 0);
+                Z.dureeAdditionnelleSeconds += (m.dureeAdditionnelleSeconds || 0);
+                Z.dureeAlertesSeconds += (m.dureeAlertesSeconds || 0);
+                Z.dureeSpecificSeconds += (m.dureeSpecificSeconds || 0);
+                Z.paxTotal += (m.paxTotal || 0);
+                Z.maxVisits += (m.maxVisits || 0);
+                Z.occurrencesMaintenance += (m.occurrencesMaintenance || 0);
+                Z.occurrencesAdditionnelles += (m.occurrencesAdditionnelles || 0);
+                Z.alertWOs += (m.alertWOs || 0);
+            });
+
+            return Object.values(zoneMap).map(Z => {
+                // Durations are SUMMED.
+                // Avg Duration (calculated column) will be handled by renderTable using these Sums / Occurrences.
+
+                return Z;
+            });
+        }
+
+        function calculateWeekStats(aggregatedMetrics) {
+            // Recalculate global stats from aggregated metrics
+            return {
+                totalPax: aggregatedMetrics.reduce((s, m) => s + m.paxTotal, 0),
+                totalAlerts: aggregatedMetrics.reduce((s, m) => s + m.alertWOs, 0),
+                // maintenance etc.
+                totalMaintenanceHours: aggregatedMetrics.reduce((s, m) => s + m.dureeMaintenanceSeconds / 3600, 0),
+                // ... populate all
+                totalZones: aggregatedMetrics.length,
+                totalOccurrencesMaintenance: aggregatedMetrics.reduce((s, m) => s + m.occurrencesMaintenance, 0),
+                totalOccurrencesAdditionnelles: aggregatedMetrics.reduce((s, m) => s + m.occurrencesAdditionnelles, 0),
+                totalAdditionnelleHours: aggregatedMetrics.reduce((s, m) => s + m.dureeAdditionnelleSeconds / 3600, 0)
+            };
+        }
+
+        function renderChartsForWeek(dates, metricsMap) {
+            // Inject specific data scope for getChartData
+            currentChartMetrics = metricsMap;
+            currentChartDates = dates.sort(); // Ensure sorted 
+
+            createChart1();
+            createChart2();
+            createChart3();
+        }
+
+        let currentChartMetrics = {};
+        let currentChartDates = [];
+
+        // MODIFIED getChartData to use Scope
+        function getChartData(zoneFilter) {
+            const dates = currentChartDates; // already sorted
+            // Format dates for labels
+            const labels = dates.map(d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
+
+            const dataSeries = dates.map(date => {
+                const metrics = currentChartMetrics[date] || [];
+                if (zoneFilter === 'all') {
+                    return {
+                        totalPax: metrics.reduce((sum, m) => sum + (m.paxTotal || 0), 0),
+                        totalMaintenanceHours: metrics.reduce((sum, m) => sum + ((m.dureeMaintenanceSeconds || 0) / 3600), 0),
+                        totalAdditionnelleHours: metrics.reduce((sum, m) => sum + ((m.dureeAdditionnelleSeconds || 0) / 3600), 0),
+                        totalAlerts: metrics.reduce((sum, m) => sum + (m.alertWOs || 0), 0)
+                    };
+                } else {
+                    const m = metrics.find(z => z.zoneName === zoneFilter) || {};
+                    return {
+                        totalPax: m.paxTotal || 0,
+                        totalMaintenanceHours: (m.dureeMaintenanceSeconds || 0) / 3600,
+                        totalAdditionnelleHours: (m.dureeAdditionnelleSeconds || 0) / 3600,
+                        totalAlerts: m.alertWOs || 0
+                    };
+                }
+            });
+
+            return { dates: labels, data: dataSeries };
         }
 
         async function loadDate(date) {
@@ -288,12 +612,19 @@
                 });
 
                 renderStats(stats);
+
+                // For Charts in Day Mode: We need to scope them to this specific date if charts are shown
+                // However, user wants charts hidden in Day Mode. 
+                // But we update currentChartDates/Metrics anyway so they are ready if user switches mode.
+                currentChartDates = [date];
+                currentChartMetrics = { [date]: metricsData.data };
+
                 applyFiltersAndSort();
 
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('statsGrid').innerHTML =
-                    '<div class="error-state">Erreur de chargement des données</div>';
+                    `<div class="error-state"><i class="ri-error-warning-line"></i> Erreur de chargement des données (${error.message})</div>`;
             }
         }
 
@@ -303,7 +634,6 @@
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                // EaseOutQuart
                 const easedProgress = 1 - Math.pow(1 - progress, 4);
                 const currentVal = progress * (end - start) + start;
 
@@ -319,7 +649,6 @@
                 if (progress < 1) {
                     window.requestAnimationFrame(step);
                 } else {
-                    // Ensure final value is exact
                     if (isFloat) {
                         obj.innerHTML = end.toLocaleString('fr-FR', {
                             minimumFractionDigits: 2,
@@ -334,45 +663,25 @@
         }
 
         function renderStats(stats) {
-            // Configuration for each KPI
-            // isFloat: true if we want decimals
-            // suffix: e.g. 'h' for hours
+            const grid = document.getElementById('statsGrid');
+
+            // Stats might be incomplete if constructed manually. Default to 0.
+            const s = {
+                totalZones: stats.totalZones || 0,
+                totalPax: stats.totalPax || 0,
+                totalMaintenanceHours: stats.totalMaintenanceHours || 0,
+                totalAdditionnelleHours: stats.totalAdditionnelleHours || 0,
+                totalOccurrencesMaintenance: stats.totalOccurrencesMaintenance || 0,
+                totalOccurrencesAdditionnelles: stats.totalOccurrencesAdditionnelles || 0
+            };
+
             const kpiConfig = [
-                {
-                    id: 'kpi-zones',
-                    label: 'Total Zones',
-                    value: stats.totalZones,
-                    icon: 'ri-map-pin-line',
-                    isFloat: false,
-                    suffix: ''
-                },
-                {
-                    id: 'kpi-pax',
-                    label: 'Total Passagers',
-                    value: stats.totalPax,
-                    icon: 'ri-group-line',
-                    isFloat: false,
-                    suffix: ''
-                },
-                {
-                    id: 'kpi-maint',
-                    label: 'Heures Maintenance',
-                    value: stats.totalMaintenanceHours,
-                    icon: 'ri-tools-line',
-                    isFloat: true,
-                    suffix: 'h'
-                },
-                {
-                    id: 'kpi-renfort',
-                    label: 'Heures Renfort',
-                    value: stats.totalAdditionnelleHours,
-                    icon: 'ri-time-line',
-                    isFloat: true,
-                    suffix: 'h'
-                }
+                { id: 'kpi-zones', label: 'Total Zones', value: s.totalZones, icon: 'ri-map-pin-line', isFloat: false, suffix: '' },
+                { id: 'kpi-pax', label: 'Total Passagers', value: s.totalPax, icon: 'ri-group-line', isFloat: false, suffix: '' },
+                { id: 'kpi-maint', label: 'Heures Maintenance', value: s.totalMaintenanceHours, icon: 'ri-tools-line', isFloat: true, suffix: 'h' },
+                { id: 'kpi-renfort', label: 'Heures Renfort', value: s.totalAdditionnelleHours, icon: 'ri-time-line', isFloat: true, suffix: 'h' }
             ];
 
-            // 1. Generate HTML
             const statsHtml = kpiConfig.map((kpi, index) => `
                 <div class="stat-card animate-enter" style="animation-delay: ${index * 100}ms">
                     <div class="stat-header">
@@ -380,63 +689,141 @@
                         <i class="${kpi.icon} stat-icon"></i>
                     </div>
                     <div class="stat-value" id="${kpi.id}">0${kpi.suffix}</div>
+                    ${kpi.id === 'kpi-maint' ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">${s.totalOccurrencesMaintenance} interventions</div>` : ''}
+                    ${kpi.id === 'kpi-renfort' ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">${s.totalOccurrencesAdditionnelles} interventions</div>` : ''}
                 </div>
             `).join('');
 
-            document.getElementById('statsGrid').innerHTML = statsHtml;
+            grid.innerHTML = statsHtml;
 
-            // 2. Trigger Animations
             kpiConfig.forEach(kpi => {
                 const el = document.getElementById(kpi.id);
-                if (el) {
-                    animateValue(el, 0, kpi.value, 500, kpi.isFloat, kpi.suffix);
-                }
+                if (el) animateValue(el, 0, kpi.value, 500, kpi.isFloat, kpi.suffix);
             });
         }
 
+        function applyFiltersAndSort() {
+            const search = document.getElementById('searchZone').value.toLowerCase();
+            const limit = document.getElementById('rowLimit').value;
 
+            // Filter
+            let filtered = allMetrics.filter(m =>
+                m.zoneName.toLowerCase().includes(search)
+            );
 
+            // Sort
+            if (sortColumn) {
+                filtered.sort((a, b) => {
+                    let valA = a[sortColumn];
+                    let valB = b[sortColumn];
+                    if (sortColumn === 'dureeSpmSeconds' || sortColumn === 'dureeAlertesSeconds') valA = valA || 0;
+                    if (sortColumn === 'dureeSpecificSeconds') valA = valA || 0;
 
-        // Load charts data with zone filtering
-        async function loadChartsData() {
-            try {
-                // Load detailed metrics for each date
-                const metricsPromises = availableDates.map(date =>
-                    fetch(`${API_URL}/metrics?date=${date}`)
-                        .then(r => r.json())
-                        .then(data => ({ date, metrics: data.data }))
-                );
-
-                const allData = await Promise.all(metricsPromises);
-
-                // Organize data
-                allMetricsByDate = {};
-                const zonesSet = new Set();
-
-                allData.forEach(({ date, metrics }) => {
-                    allMetricsByDate[date] = metrics;
-                    metrics.forEach(m => zonesSet.add(m.zoneName));
+                    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
                 });
-
-                allZones = Array.from(zonesSet).sort();
-
-                // Populate zone filters
-                populateZoneFilters();
-
-                // Set Chart.js defaults
-                Chart.defaults.font.family = "'Inter', sans-serif";
-                Chart.defaults.color = '#64748b';
-
-                // Create all charts
-                createChart1();
-                createChart2();
-                createChart3();
-
-            } catch (error) {
-                console.error('Error loading charts data:', error);
+            } else {
+                // Default sort: Alertes desc, then Pax desc
+                filtered.sort((a, b) => (b.alertWOs || 0) - (a.alertWOs || 0) || b.paxTotal - a.paxTotal);
             }
+
+            allZones = [...new Set(filtered.map(m => m.zoneName))].sort();
+            populateZoneFilters();
+
+            renderTable(filtered, limit);
         }
 
+        function sortTable(col) {
+            if (sortColumn === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = col;
+                sortDirection = 'desc';
+            }
+            applyFiltersAndSort();
+        }
+
+        function renderTable(data, limit = '30') {
+            const tbody = document.getElementById('tableContent');
+            if (data.length === 0) {
+                tbody.innerHTML = '<div class="error-state">Aucune donnée trouvée</div>';
+                document.getElementById('displayInfo').textContent = '';
+                return;
+            }
+
+            const displayData = limit === 'all' ? data : data.slice(0, parseInt(limit));
+            document.getElementById('displayInfo').textContent =
+                `Affichage de ${displayData.length} sur ${data.length} zones`;
+
+            let tableHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('zoneName')">Zone</th>
+                            <th onclick="sortTable('nbVisits')">Visites (Réel / Prévu)</th>
+                            <th onclick="sortTable('occurrencesMaintenance')">Maint. (Occ)</th>
+                            <th onclick="sortTable('occurrencesAdditionnelles')">Renf. (Occ)</th>
+                             <th onclick="sortTable('alertWOs')">Alertes (Nb)</th>
+                            <th onclick="sortTable('dureeAlertesSeconds')">Alertes (Tps)</th>
+                            <th onclick="sortTable('dureeSpecificSeconds')">Spécifique (Tps)</th>
+                            <th onclick="sortTable('paxTotal')">Passagers</th>
+                            <th onclick="sortTable('avgDuration')">Durée Moy.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            displayData.forEach(metric => {
+                const zoneIcon = getZoneIcon(metric.zoneName.length);
+                const mainSec = metric.dureeMaintenanceSeconds || 0;
+                const addSec = metric.dureeAdditionnelleSeconds || 0;
+                const totalSec = mainSec + addSec;
+                const totalOcc = (metric.occurrencesMaintenance || 0) + (metric.occurrencesAdditionnelles || 0);
+                const avgMin = totalOcc > 0 ? Math.round((totalSec / 60) / totalOcc) : 0;
+                const alertesMin = Math.round((metric.dureeAlertesSeconds || 0) / 60);
+                const specMin = Math.round((metric.dureeSpecificSeconds || 0) / 60);
+                const nbVisits = metric.nbVisits || 0;
+                const maxVisits = metric.maxVisits || 0;
+                let visitBadgeClass = 'badge-neutral';
+                if (maxVisits > 0) {
+                    if (nbVisits === maxVisits) visitBadgeClass = 'badge-success';
+                    else if (nbVisits > maxVisits) visitBadgeClass = 'badge-warning';
+                    else visitBadgeClass = 'badge-danger';
+                }
+
+                tableHtml += `
+                    <tr>
+                        <td>
+                            <div class="cell-zone">
+                                <div class="cell-icon"><i class="${zoneIcon}"></i></div>
+                                <div class="cell-info">
+                                    <span style="font-weight: 500;">${metric.zoneName}</span>
+                                    <span class="cell-sub">${metric.zoneId.split('/').pop()}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="border-right: 1px solid var(--border);">
+                            ${maxVisits > 0
+                        ? `<span class="badge ${visitBadgeClass}">${nbVisits} / ${maxVisits}</span>`
+                        : `<span style="color: var(--text-muted); font-size: 0.9em;">-</span>`}
+                        </td>
+                        <td><span class="badge badge-neutral">${metric.occurrencesMaintenance || 0}</span></td>
+                        <td>${(metric.occurrencesAdditionnelles || 0) > 0 ? `<span class="badge badge-warning">${metric.occurrencesAdditionnelles}</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
+                        <td>${(metric.alertWOs || 0) > 0 ? `<span class="badge badge-danger">${metric.alertWOs}</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
+                         <td>${alertesMin > 0 ? `<span class="badge badge-neutral">${alertesMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
+                        <td>${specMin > 0 ? `<span class="badge badge-neutral">${specMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
+                        <td style="font-weight: 600; font-family: monospace;">${(metric.paxTotal || 0).toLocaleString('fr-FR')}</td>
+                        <td style="text-align: right;"><span class="badge badge-success">${avgMin} min</span></td>
+                    </tr>
+                    `;
+            });
+
+            tableHtml += `</tbody></table>`;
+            document.getElementById('tableContent').innerHTML = tableHtml;
+        }
+
+        // Charts Helpers
         function populateZoneFilters() {
             [1, 2, 3].forEach(chartNum => {
                 const select = document.getElementById(`zoneFilter${chartNum}`);
@@ -445,43 +832,6 @@
                 ).join('');
                 select.innerHTML = '<option value="all">Toutes les zones</option>' + zonesHtml;
             });
-        }
-
-        function getChartData(zoneFilter) {
-            const chartDates = availableDates.map(d =>
-                new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-            ).reverse();
-
-            const reversedDates = [...availableDates].reverse();
-
-            if (zoneFilter === 'all') {
-                // Aggregate all zones
-                const aggregated = reversedDates.map(date => {
-                    const metrics = allMetricsByDate[date] || [];
-                    return {
-                        totalPax: metrics.reduce((sum, m) => sum + (m.paxTotal || 0), 0),
-                        totalMaintenanceHours: metrics.reduce((sum, m) =>
-                            sum + ((m.dureeMaintenanceSeconds || 0) / 3600), 0),
-                        totalAdditionnelleHours: metrics.reduce((sum, m) =>
-                            sum + ((m.dureeAdditionnelleSeconds || 0) / 3600), 0),
-                        totalAlerts: metrics.reduce((sum, m) => sum + (m.alertWOs || 0), 0)
-                    };
-                });
-                return { dates: chartDates, data: aggregated };
-            } else {
-                // Filter for specific zone
-                const zoneData = reversedDates.map(date => {
-                    const metrics = allMetricsByDate[date] || [];
-                    const zoneMetric = metrics.find(m => m.zoneName === zoneFilter) || {};
-                    return {
-                        totalPax: zoneMetric.paxTotal || 0,
-                        totalMaintenanceHours: (zoneMetric.dureeMaintenanceSeconds || 0) / 3600,
-                        totalAdditionnelleHours: (zoneMetric.dureeAdditionnelleSeconds || 0) / 3600,
-                        totalAlerts: zoneMetric.alertWOs || 0
-                    };
-                });
-                return { dates: chartDates, data: zoneData };
-            }
         }
 
         function getChartOptions(yLabel, y1Label) {
@@ -498,32 +848,18 @@
                 },
                 scales: {
                     y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: yLabel,
-                            font: { size: 12, weight: '600' }
-                        },
+                        type: 'linear', display: true, position: 'left',
+                        title: { display: true, text: yLabel, font: { size: 12, weight: '600' } },
                         grid: { color: '#f1f5f9' },
                         ticks: { callback: v => v.toLocaleString('fr-FR') }
                     },
                     y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: y1Label,
-                            font: { size: 12, weight: '600' }
-                        },
+                        type: 'linear', display: true, position: 'right',
+                        title: { display: true, text: y1Label, font: { size: 12, weight: '600' } },
                         grid: { display: false },
                         ticks: { callback: v => v.toLocaleString('fr-FR') }
                     },
-                    x: {
-                        grid: { display: false }
-                    }
+                    x: { grid: { display: false } }
                 }
             };
         }
@@ -532,32 +868,14 @@
             const ctx = document.getElementById('chart1').getContext('2d');
             const zoneFilter = document.getElementById('zoneFilter1').value;
             const { dates, data } = getChartData(zoneFilter);
-
             if (chart1) chart1.destroy();
-
             chart1 = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: dates,
                     datasets: [
-                        {
-                            label: 'Passagers',
-                            data: data.map(d => d.totalPax),
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Renfort (h)',
-                            data: data.map(d => d.totalAdditionnelleHours.toFixed(2)),
-                            borderColor: '#f59e0b',
-                            tension: 0.4,
-                            borderWidth: 2,
-                            yAxisID: 'y1'
-                        }
+                        { label: 'Passagers', data: data.map(d => d.totalPax), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 2, yAxisID: 'y' },
+                        { label: 'Renfort (h)', data: data.map(d => d.totalAdditionnelleHours.toFixed(2)), borderColor: '#f59e0b', tension: 0.4, borderWidth: 2, yAxisID: 'y1' }
                     ]
                 },
                 options: getChartOptions('Passagers', 'Heures Renfort')
@@ -568,32 +886,14 @@
             const ctx = document.getElementById('chart2').getContext('2d');
             const zoneFilter = document.getElementById('zoneFilter2').value;
             const { dates, data } = getChartData(zoneFilter);
-
             if (chart2) chart2.destroy();
-
             chart2 = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: dates,
                     datasets: [
-                        {
-                            label: 'Passagers',
-                            data: data.map(d => d.totalPax),
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Alertes',
-                            data: data.map(d => d.totalAlerts),
-                            borderColor: '#ef4444',
-                            tension: 0.4,
-                            borderWidth: 2,
-                            yAxisID: 'y1'
-                        }
+                        { label: 'Passagers', data: data.map(d => d.totalPax), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 2, yAxisID: 'y' },
+                        { label: 'Alertes', data: data.map(d => d.totalAlerts), borderColor: '#ef4444', tension: 0.4, borderWidth: 2, yAxisID: 'y1' }
                     ]
                 },
                 options: getChartOptions('Passagers', 'Alertes')
@@ -604,32 +904,14 @@
             const ctx = document.getElementById('chart3').getContext('2d');
             const zoneFilter = document.getElementById('zoneFilter3').value;
             const { dates, data } = getChartData(zoneFilter);
-
             if (chart3) chart3.destroy();
-
             chart3 = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: dates,
                     datasets: [
-                        {
-                            label: 'Passagers',
-                            data: data.map(d => d.totalPax),
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Maintenance (h)',
-                            data: data.map(d => d.totalMaintenanceHours.toFixed(2)),
-                            borderColor: '#10b981',
-                            tension: 0.4,
-                            borderWidth: 2,
-                            yAxisID: 'y1'
-                        }
+                        { label: 'Passagers', data: data.map(d => d.totalPax), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 2, yAxisID: 'y' },
+                        { label: 'Maintenance (h)', data: data.map(d => d.totalMaintenanceHours.toFixed(2)), borderColor: '#10b981', tension: 0.4, borderWidth: 2, yAxisID: 'y1' }
                     ]
                 },
                 options: getChartOptions('Passagers', 'Heures Maintenance')
@@ -644,26 +926,6 @@
             }
         }
 
-
-        // Table & Filtering Logic
-        function loadSelectedDate() {
-            const selector = document.getElementById('dateSelector');
-            const val = selector.value;
-            if (val === "") return;
-            currentDateIndex = parseInt(val);
-            loadDate(availableDates[currentDateIndex]);
-        }
-
-        function navigateDate(direction) {
-            const newIndex = currentDateIndex + direction;
-            if (newIndex >= 0 && newIndex < availableDates.length) {
-                currentDateIndex = newIndex;
-                document.getElementById('dateSelector').value = currentDateIndex;
-                loadDate(availableDates[currentDateIndex]);
-            }
-        }
-
-
         // Modal functions
         let modalChart = null;
         let currentModalChartNum = null;
@@ -672,271 +934,50 @@
             const modal = document.getElementById('chartModal');
             const modalTitle = document.getElementById('modalChartTitle');
             const zoneFilter = document.getElementById(`zoneFilter${chartNum}`).value;
-
-            // Set title based on chart number
-            const titles = {
-                1: 'Passagers & Renfort',
-                2: 'Passagers & Alertes',
-                3: 'Passagers & Maintenance'
-            };
+            const titles = { 1: 'Passagers & Renfort', 2: 'Passagers & Alertes', 3: 'Passagers & Maintenance' };
             modalTitle.textContent = titles[chartNum];
-
-            // Show modal
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
-
-            // Store current chart number
             currentModalChartNum = chartNum;
-
-            // Create chart in modal
-            setTimeout(() => {
-                createModalChart(chartNum, zoneFilter);
-            }, 100);
+            setTimeout(() => { createModalChart(chartNum, zoneFilter); }, 100);
         }
 
         function closeChartModal(event) {
             if (event) {
-                // Only close if clicking on backdrop or close button
-                if (event.target.id !== 'chartModal' && !event.target.closest('.ri-close-line')) {
-                    return;
-                }
+                if (event.target.id !== 'chartModal' && !event.target.closest('.ri-close-line')) return;
                 event.stopPropagation();
             }
-
             const modal = document.getElementById('chartModal');
             modal.classList.remove('active');
             document.body.style.overflow = 'auto';
-
-            // Destroy modal chart
-            if (modalChart) {
-                modalChart.destroy();
-                modalChart = null;
-            }
+            if (modalChart) { modalChart.destroy(); modalChart = null; }
         }
 
         function createModalChart(chartNum, zoneFilter) {
             const canvas = document.getElementById('modalChart');
             const container = canvas.parentElement;
             const ctx = canvas.getContext('2d');
-
-            // Set canvas dimensions based on container
-            canvas.width = container.clientWidth - 64; // padding
+            canvas.width = container.clientWidth - 64;
             canvas.height = container.clientHeight - 64;
-
             const { dates, data } = getChartData(zoneFilter);
-
             if (modalChart) modalChart.destroy();
-
-            const chartConfigs = {
-                1: {
-                    label2: 'Renfort (h)',
-                    data2: data.map(d => d.totalAdditionnelleHours.toFixed(2)),
-                    color2: '#f59e0b',
-                    y1Label: 'Heures Renfort'
-                },
-                2: {
-                    label2: 'Alertes',
-                    data2: data.map(d => d.totalAlerts),
-                    color2: '#ef4444',
-                    y1Label: 'Alertes'
-                },
-                3: {
-                    label2: 'Maintenance (h)',
-                    data2: data.map(d => d.totalMaintenanceHours.toFixed(2)),
-                    color2: '#10b981',
-                    y1Label: 'Heures Maintenance'
-                }
+            const configMap = {
+                1: { label2: 'Renfort (h)', data2: data.map(d => d.totalAdditionnelleHours.toFixed(2)), color2: '#f59e0b', y1Label: 'Heures Renfort' },
+                2: { label2: 'Alertes', data2: data.map(d => d.totalAlerts), color2: '#ef4444', y1Label: 'Alertes' },
+                3: { label2: 'Maintenance (h)', data2: data.map(d => d.totalMaintenanceHours.toFixed(2)), color2: '#10b981', y1Label: 'Heures Maintenance' }
             };
-
-            const config = chartConfigs[chartNum];
-
+            const config = configMap[chartNum];
             modalChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: dates,
                     datasets: [
-                        {
-                            label: 'Passagers',
-                            data: data.map(d => d.totalPax),
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: config.label2,
-                            data: config.data2,
-                            borderColor: config.color2,
-                            tension: 0.4,
-                            borderWidth: 2,
-                            yAxisID: 'y1'
-                        }
+                        { label: 'Passagers', data: data.map(d => d.totalPax), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 2, yAxisID: 'y' },
+                        { label: config.label2, data: config.data2, borderColor: config.color2, tension: 0.4, borderWidth: 2, yAxisID: 'y1' }
                     ]
                 },
-                options: {
-                    ...getChartOptions('Passagers', config.y1Label),
-                    maintainAspectRatio: true,
-                    aspectRatio: 2.5
-                }
+                options: getChartOptions('Passagers', config.y1Label)
             });
-        }
-
-        // Close modal on ESC key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('chartModal').classList.contains('active')) {
-                closeChartModal();
-            }
-        });
-
-
-        // Table & Filtering Logic
-        function applyFiltersAndSort() {
-            const searchTerm = document.getElementById('searchZone').value.toLowerCase();
-            const rowLimit = document.getElementById('rowLimit').value;
-
-            let filteredMetrics = allMetrics.filter(metric =>
-                metric.zoneName.toLowerCase().includes(searchTerm) ||
-                metric.zoneId.toLowerCase().includes(searchTerm)
-            );
-
-            if (sortColumn) {
-                filteredMetrics.sort((a, b) => {
-                    let aVal, bVal;
-                    switch (sortColumn) {
-                        case 'zone': aVal = a.zoneName.toLowerCase(); bVal = b.zoneName.toLowerCase(); break;
-                        case 'visites': aVal = a.nbVisits || 0; bVal = b.nbVisits || 0; break;
-                        case 'maintenance': aVal = a.occurrencesMaintenance || 0; bVal = b.occurrencesMaintenance || 0; break;
-                        case 'additionnelles': aVal = a.occurrencesAdditionnelles || 0; bVal = b.occurrencesAdditionnelles || 0; break;
-                        case 'alertes': aVal = a.alertWOs || 0; bVal = b.alertWOs || 0; break;
-                        case 'dureeAlertes': aVal = a.dureeAlertesSeconds || 0; bVal = b.dureeAlertesSeconds || 0; break;
-                        case 'dureeSpecific': aVal = a.dureeSpecificSeconds || 0; bVal = b.dureeSpecificSeconds || 0; break;
-                        case 'pax': aVal = a.paxTotal || 0; bVal = b.paxTotal || 0; break;
-                        case 'duree':
-                            const aT = (a.dureeMaintenanceSeconds || 0) + (a.dureeAdditionnelleSeconds || 0);
-                            const aO = (a.occurrencesMaintenance || 0) + (a.occurrencesAdditionnelles || 0);
-                            aVal = aO > 0 ? aT / aO : 0;
-                            const bT = (b.dureeMaintenanceSeconds || 0) + (b.dureeAdditionnelleSeconds || 0);
-                            const bO = (b.occurrencesMaintenance || 0) + (b.occurrencesAdditionnelles || 0);
-                            bVal = bO > 0 ? bT / bO : 0;
-                            break;
-                    }
-                    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-                    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            }
-
-            const total = filteredMetrics.length;
-            const displayMetrics = rowLimit === 'all' ? filteredMetrics : filteredMetrics.slice(0, parseInt(rowLimit));
-
-            document.getElementById('displayInfo').textContent = `${displayMetrics.length} résultats / ${total}`;
-            renderTable(displayMetrics);
-        }
-
-        function sortBy(column) {
-            if (sortColumn === column) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = column;
-                sortDirection = 'asc';
-            }
-            applyFiltersAndSort();
-        }
-
-        function renderTable(metrics) {
-            let tableHtml = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th onclick="sortBy('zone')">Zone <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('visites')" style="border-right: 1px solid var(--border);">Visites (Réel / Prévu) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('maintenance')">Occurrences <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('additionnelles')">Additionnelles <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('alertes')">Alertes (Qté) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('dureeAlertes')">Alertes (Tps) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('dureeSpecific')">Spécifique (Tps) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('pax')">Passagers <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        <th onclick="sortBy('duree')" style="text-align: right;">Durée Moy. <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    `;
-
-            metrics.forEach((metric, index) => {
-                const totalSeconds = (metric.dureeMaintenanceSeconds || 0) + (metric.dureeAdditionnelleSeconds || 0);
-                const totalOcc = (metric.occurrencesMaintenance || 0);
-                const avgMin = totalOcc > 0 ? Math.round(totalSeconds / totalOcc / 60) : 0;
-
-                // Duration formatters
-                const alertesMin = Math.round((metric.dureeAlertesSeconds || 0) / 60);
-                const specMin = Math.round((metric.dureeSpecificSeconds || 0) / 60);
-
-                // Logic for visits column
-                const nbVisits = metric.nbVisits || 0;
-                const minVisits = metric.minVisits || 0;
-                const maxVisits = metric.maxVisits || 0;
-                let visitBadgeClass = 'badge-neutral';
-
-                // Red if more than planned max, Orange if less than planned min (if min > 0)
-                if (maxVisits > 0 && nbVisits > maxVisits) {
-                    visitBadgeClass = 'badge-danger'; // Trop de visites
-                } else if (minVisits > 0 && nbVisits < minVisits) {
-                    visitBadgeClass = 'badge-warning'; // Pas assez de visites
-                } else if (maxVisits > 0) {
-                    visitBadgeClass = 'badge-success'; // Dans les clous
-                }
-
-                tableHtml += `
-                    <tr>
-                        <td>
-                            <div class="cell-zone">
-                                <div class="cell-icon">
-                                    <i class="${getZoneIcon(index)}"></i>
-                                </div>
-                                <div class="cell-info">
-                                    <span style="font-weight: 500;">${metric.zoneName}</span>
-                                    <span class="cell-sub">${metric.zoneId.split('/').pop()}</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td style="border-right: 1px solid var(--border);">
-                            ${maxVisits > 0
-                        ? `<span class="badge ${visitBadgeClass}">${nbVisits} / ${maxVisits}</span>`
-                        : `<span style="color: var(--text-muted); font-size: 0.9em;">-</span>`}
-                        </td>
-                        <td>
-                            <span class="badge badge-neutral">${metric.occurrencesMaintenance || 0}</span>
-                        </td>
-                        <td>
-                            ${(metric.occurrencesAdditionnelles || 0) > 0
-                        ? `<span class="badge badge-warning">${metric.occurrencesAdditionnelles}</span>`
-                        : '<span style="color: var(--text-muted);">-</span>'}
-                        </td>
-                        <td>
-                            ${(metric.alertWOs || 0) > 0
-                        ? `<span class="badge badge-danger">${metric.alertWOs}</span>`
-                        : '<span style="color: var(--text-muted);">-</span>'}
-                        </td>
-                        <td>
-                             ${alertesMin > 0 ? `<span class="badge badge-neutral">${alertesMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}
-                        </td>
-                        <td>
-                             ${specMin > 0 ? `<span class="badge badge-neutral">${specMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}
-                        </td>
-                        <td style="font-weight: 600; font-family: monospace;">
-                            ${(metric.paxTotal || 0).toLocaleString('fr-FR')}
-                        </td>
-                        <td style="text-align: right;">
-                            <span class="badge badge-success">${avgMin} min</span>
-                        </td>
-                    </tr>
-                    `;
-            });
-
-            tableHtml += `</tbody></table>`;
-            document.getElementById('tableContent').innerHTML = tableHtml;
         }
 
         loadAvailableDates();
