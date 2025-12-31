@@ -580,7 +580,8 @@
                 if (!zoneMap[m.zoneName]) {
                     zoneMap[m.zoneName] = { ...m };
                     // Reset accumulators
-                    zoneMap[m.zoneName].nbVisits = 0; // Will sum then avg
+                    zoneMap[m.zoneName].nbVisits = 0;
+                    zoneMap[m.zoneName].minVisits = 0;
                     zoneMap[m.zoneName].dureeMaintenanceSeconds = 0;
                     zoneMap[m.zoneName].dureeAdditionnelleSeconds = 0;
                     zoneMap[m.zoneName].dureeAlertesSeconds = 0;
@@ -603,6 +604,7 @@
                 Z.dureeSpecificSeconds += (m.dureeSpecificSeconds || 0);
                 Z.paxTotal += (m.paxTotal || 0);
                 Z.maxVisits += (m.maxVisits || 0);
+                Z.minVisits += (m.minVisits || 0);
                 Z.occurrencesMaintenance += (m.occurrencesMaintenance || 0);
                 Z.occurrencesAdditionnelles += (m.occurrencesAdditionnelles || 0);
                 Z.alertWOs += (m.alertWOs || 0);
@@ -684,8 +686,8 @@
                 // Filtering Logic
                 allMetrics = metricsData.data.filter(m => {
                     const name = m.zoneName.toLowerCase();
-                    const nbVisits = m.nbVisits || 0;
-                    const maxVisits = m.maxVisits || 0;
+                    const realVisits = (m.occurrencesMaintenance || 0) + (m.occurrencesAdditionnelles || 0) + (m.alertWOs || 0);
+                    const plannedVisits = m.minVisits || 0;
 
                     // 1. Exclude specific unwanted zones
                     if (name.includes('salle de pause') ||
@@ -698,7 +700,7 @@
                     }
 
                     // 2. Exclude inactive zones (0 planned AND 0 real)
-                    if (maxVisits === 0 && nbVisits === 0) {
+                    if (plannedVisits === 0 && realVisits === 0) {
                         return false;
                     }
 
@@ -855,11 +857,10 @@
                     <thead>
                         <tr>
                             <th onclick="sortTable('zoneName')">Zone</th>
-                            <th onclick="sortTable('nbVisits')">Visites (Réel / Prévu)</th>
-                            <th onclick="sortTable('occurrencesMaintenance')">Maint. (Occ)</th>
-                            <th onclick="sortTable('occurrencesAdditionnelles')">Renf. (Occ)</th>
+                            <th onclick="sortTable('nbVisits')">Visites (Réel/Prévu)</th>
+                            <th onclick="sortTable('occurrencesMaintenance')">Maintenance</th>
+                            <th onclick="sortTable('occurrencesAdditionnelles')">Additionnel</th>
                              <th onclick="sortTable('alertWOs')">Alertes (Nb)</th>
-                            <th onclick="sortTable('dureeAlertesSeconds')">Alertes (Tps)</th>
                             <th onclick="sortTable('dureeSpecificSeconds')">Spécifique (Tps)</th>
                             <th onclick="sortTable('paxTotal')">Passagers</th>
                             <th onclick="sortTable('avgDuration')">Durée Moy.</th>
@@ -877,8 +878,11 @@
                 const avgMin = totalOcc > 0 ? Math.round((totalSec / 60) / totalOcc) : 0;
                 const alertesMin = Math.round((metric.dureeAlertesSeconds || 0) / 60);
                 const specMin = Math.round((metric.dureeSpecificSeconds || 0) / 60);
-                const nbVisits = metric.nbVisits || 0;
-                const maxVisits = metric.maxVisits || 0;
+
+                // Real = Maint + Add Occurrences + Alertes
+                // Planned = minVisits
+                const nbVisits = (metric.occurrencesMaintenance || 0) + (metric.occurrencesAdditionnelles || 0) + (metric.alertWOs || 0);
+                const maxVisits = metric.minVisits || 0;
                 let visitBadgeClass = 'badge-neutral';
                 if (maxVisits > 0) {
                     if (nbVisits === maxVisits) visitBadgeClass = 'badge-success';
@@ -905,7 +909,6 @@
                         <td><span class="badge badge-neutral">${metric.occurrencesMaintenance || 0}</span></td>
                         <td>${(metric.occurrencesAdditionnelles || 0) > 0 ? `<span class="badge badge-warning">${metric.occurrencesAdditionnelles}</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
                         <td>${(metric.alertWOs || 0) > 0 ? `<span class="badge badge-danger">${metric.alertWOs}</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
-                         <td>${alertesMin > 0 ? `<span class="badge badge-neutral">${alertesMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
                         <td>${specMin > 0 ? `<span class="badge badge-neutral">${specMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
                         <td style="font-weight: 600; font-family: monospace;">${(metric.paxTotal || 0).toLocaleString('fr-FR')}</td>
                         <td style="text-align: right;"><span class="badge badge-success">${avgMin} min</span></td>
