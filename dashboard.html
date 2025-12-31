@@ -46,12 +46,17 @@
                         <input type="radio" name="viewMode" value="week" onchange="switchViewMode()">
                         Semaine
                     </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer; font-size: 0.875rem;">
+                        <input type="radio" name="viewMode" value="month" onchange="switchViewMode()">
+                        Mois
+                    </label>
                 </div>
 
                 <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
 
                 <button class="btn" onclick="navigate(-1)">
-                    <i class="ri-arrow-right-s-line"></i>
+                    <i class="ri-arrow-left-s-line"></i>
                 </button>
 
                 <div id="dateControlContainer" style="display:inline-block;">
@@ -62,8 +67,12 @@
                     <select id="weekSelector" onchange="loadSelectedWeek()"></select>
                 </div>
 
+                <div id="monthControlContainer" style="display:none;">
+                    <select id="monthSelector" onchange="loadSelectedMonth()"></select>
+                </div>
+
                 <button class="btn" onclick="navigate(1)">
-                    <i class="ri-arrow-left-s-line"></i>
+                    <i class="ri-arrow-right-s-line"></i>
                 </button>
                 <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
                 <button class="btn btn-primary" onclick="window.location.href='upload.html'">
@@ -248,7 +257,13 @@
         // Week View Vars
         let weeks = [];
         let currentWeekIndex = 0;
-        let currentWeekMetrics = {}; // Map: date -> metrics[] for charts scope
+
+        // Month View Vars
+        let months = [];
+        let currentMonthIndex = 0;
+
+        let currentChartMetrics = {}; // Map: date -> metrics[] for charts scope
+        let currentChartDates = [];
 
         let chart1 = null;
         let chart2 = null;
@@ -298,6 +313,9 @@
                 // Init Weeks (populates week selector)
                 initWeeks();
 
+                // Init Months (populates month selector)
+                initMonths();
+
                 // Select Day Mode by Default (checked in HTML)
                 // We call switchViewMode but we DON'T let it trigger loading during init
                 // We will handle the initial load explicitly below.
@@ -310,7 +328,9 @@
                 document.querySelector('.charts-grid').style.display = isWeek ? 'grid' : 'none';
 
                 // Initial Load
-                if (isWeek) {
+                if (mode === 'month') {
+                    await loadSelectedMonth();
+                } else if (mode === 'week') {
                     await loadSelectedWeek();
                 } else {
                     await loadSelectedDate();
@@ -351,39 +371,67 @@
             currentWeekIndex = 0; // Default to first (newest)
         }
 
+        function initMonths() {
+            const monthMap = new Map();
+            availableDates.forEach(dateStr => {
+                const d = new Date(dateStr);
+                const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                if (!monthMap.has(key)) monthMap.set(key, []);
+                monthMap.get(key).push(dateStr);
+            });
+
+            months = Array.from(monthMap.entries())
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .reverse()
+                .map(([key, dates]) => {
+                    const [year, month] = key.split('-');
+                    const dateObj = new Date(year, month - 1);
+                    const label = dateObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                    // Capitalize first letter
+                    const capitalized = label.charAt(0).toUpperCase() + label.slice(1);
+                    return { label: capitalized, dates, monthKey: key };
+                });
+
+            const sel = document.getElementById('monthSelector');
+            sel.innerHTML = months.map((m, i) => `<option value="${i}">${m.label}</option>`).join('');
+            currentMonthIndex = 0;
+        }
+
         function switchViewMode() {
             const mode = document.querySelector('input[name="viewMode"]:checked').value;
             const isWeek = mode === 'week';
+            const isMonth = mode === 'month';
 
             // Toggle Controls
-            document.getElementById('dateControlContainer').style.display = isWeek ? 'none' : 'inline-block';
+            document.getElementById('dateControlContainer').style.display = (mode === 'day') ? 'inline-block' : 'none';
             document.getElementById('weekControlContainer').style.display = isWeek ? 'inline-block' : 'none';
+            document.getElementById('monthControlContainer').style.display = isMonth ? 'inline-block' : 'none';
 
             // Toggle Logic
             const chartsGrid = document.querySelector('.charts-grid');
-            const statsGrid = document.getElementById('statsGrid');
 
-            if (isWeek) {
-                // WEEK MODE: Show Graphs, Hide Day Stats (optional, maybe show week stats?)
-                // User said: "semaine quand il est coché la semaine qui a été choisi va s'afficher avec les graphs"
+            if (isMonth) {
                 chartsGrid.style.display = 'grid';
-                // We keep StatsGrid but populate it with Week aggregated stats? Or hide?
-                // User didn't say. But Day Stats for a week is confusing. 
-                // I'll render Week Stats in the same grid.
-
+                loadSelectedMonth();
+            } else if (isWeek) {
+                chartsGrid.style.display = 'grid';
                 loadSelectedWeek();
             } else {
-                // DAY MODE: Hide Graphs
-                // User said: "quand le mode jour est coché il ne faut pas affiché les graphes"
                 chartsGrid.style.display = 'none';
-
                 loadSelectedDate();
             }
         }
 
         function navigate(direction) {
             const mode = document.querySelector('input[name="viewMode"]:checked').value;
-            if (mode === 'week') {
+            if (mode === 'month') {
+                const nextIndex = currentMonthIndex - direction;
+                if (nextIndex >= 0 && nextIndex < months.length) {
+                    currentMonthIndex = nextIndex;
+                    document.getElementById('monthSelector').value = currentMonthIndex;
+                    loadSelectedMonth();
+                }
+            } else if (mode === 'week') {
                 const nextIndex = currentWeekIndex - direction; // Invert direction for intuitive 
                 if (nextIndex >= 0 && nextIndex < weeks.length) {
                     currentWeekIndex = nextIndex;
@@ -398,6 +446,54 @@
                     document.getElementById('dateSelector').value = currentDateIndex;
                     loadSelectedDate();
                 }
+            }
+        }
+
+        async function loadSelectedMonth() {
+            const index = parseInt(document.getElementById('monthSelector').value);
+            currentMonthIndex = index;
+            const month = months[index];
+            if (!month) return;
+
+            setLoading(true);
+            try {
+                const promises = month.dates.map(date =>
+                    fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                );
+
+                const metricsWrappers = await Promise.all(promises);
+                const dailyMetricsArrays = metricsWrappers
+                    .filter(w => w && w.data && Array.isArray(w.data))
+                    .map(w => w.data);
+
+                if (dailyMetricsArrays.length === 0) {
+                    throw new Error("Aucune donnée disponible pour ce mois.");
+                }
+
+                allMetrics = aggregateWeekData(dailyMetricsArrays); // Logic same as week
+
+                allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
+                populateZoneFilters();
+
+                const monthStats = calculateWeekStats(allMetrics);
+                renderStats(monthStats);
+
+                const monthMetricsMap = {};
+                month.dates.forEach((d, i) => {
+                    if (metricsWrappers[i] && metricsWrappers[i].data) {
+                        monthMetricsMap[d] = metricsWrappers[i].data;
+                    }
+                });
+                renderChartsForWeek(month.dates, monthMetricsMap);
+
+                applyFiltersAndSort();
+
+            } catch (e) {
+                console.error("Error loading month", e);
+                document.getElementById('statsGrid').innerHTML =
+                    `<div class="error-state"><i class="ri-error-warning-line"></i> ${e.message || "Erreur lors du chargement du mois"}</div>`;
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -545,8 +641,6 @@
             createChart3();
         }
 
-        let currentChartMetrics = {};
-        let currentChartDates = [];
 
         // MODIFIED getChartData to use Scope
         function getChartData(zoneFilter) {
