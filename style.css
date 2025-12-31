@@ -144,6 +144,25 @@ select:focus {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+.view-mode-switch {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    background: var(--bg-body);
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.view-mode-switch label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
 /* Button Icon */
 .btn-icon {
     padding: 0.5rem;
@@ -603,4 +622,101 @@ select:focus {
     font-weight: 500;
     border: 1px solid rgba(239, 68, 68, 0.2);
     margin: 1rem 0;
+}
+
+/* Responsive Improvements */
+@media (max-width: 1200px) {
+    .layout {
+        padding: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .brand {
+        width: 100%;
+        justify-content: flex-start;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 1rem;
+    }
+
+    .brand h1 {
+        font-size: 1.125rem;
+        border-left: none;
+        padding-left: 0;
+    }
+
+    .controls {
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: flex-start;
+        gap: 0.75rem;
+    }
+
+    /* Hide separators on small screens to save space */
+    .controls div[style*="width: 1px"] {
+        display: none !important;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .controls {
+        gap: 0.5rem;
+    }
+
+    .btn span {
+        display: none;
+        /* Hide button text on very small screens */
+    }
+
+    .btn {
+        padding: 0.5rem;
+    }
+
+    .brand img {
+        height: 32px;
+    }
+
+    .brand h1 {
+        font-size: 1rem;
+    }
+
+    .view-mode-switch {
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Table Responsive Helper */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-top: 1rem;
+}
+
+.table-container table {
+    min-width: 1000px;
+    /* Ensure table doesn't collapse too much */
 }
