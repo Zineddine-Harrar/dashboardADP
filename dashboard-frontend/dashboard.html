@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons: Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chatbot.css">
+</head>
+
+<body>
+    <div class="layout">
+        <!-- Top Navigation -->
+        <header class="header">
+            <div class="brand">
+                <img src="img/atalian-LOGO.png" alt="Atalian Global Services">
+                <h1>KPI DATALIAN</h1>
+            </div>
+            <div class="controls">
+                <!-- Theme Toggle -->
+                <button class="btn" onclick="toggleTheme()" title="Mode Nuit">
+                    <i id="themeIcon" class="ri-moon-line"></i>
+                </button>
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+
+                <button class="btn" onclick="navigateDate(1)">
+                    <i class="ri-arrow-left-s-line"></i>
+                </button>
+                <select id="dateSelector" onchange="loadSelectedDate()">
+                    <option value="">Chargement...</option>
+                </select>
+                <button class="btn" onclick="navigateDate(-1)">
+                    <i class="ri-arrow-right-s-line"></i>
+                </button>
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+                <button class="btn btn-primary" onclick="window.location.href='upload.html'">
+                    <i class="ri-upload-cloud-line"></i>
+                    <span>Importer</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI Grid -->
+        <div class="stats-grid animate-enter" id="statsGrid" style="animation-delay: 100ms">
+            <div class="loading-state">Chargement des données...</div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid animate-enter" style="animation-delay: 200ms">
+            <!-- Chart 1: PAX & Renfort -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">PAX & Renfort</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="zoneFilter1" class="chart-zone-filter" onchange="updateChart(1)">
+                            <option value="all">Toutes les zones</option>
+                        </select>
+                        <button class="btn btn-icon" onclick="openChartModal(1)" title="Agrandir">
+                            <i class="ri-fullscreen-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart1"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: PAX & Alertes -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">PAX & Alertes</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="zoneFilter2" class="chart-zone-filter" onchange="updateChart(2)">
+                            <option value="all">Toutes les zones</option>
+                        </select>
+                        <button class="btn btn-icon" onclick="openChartModal(2)" title="Agrandir">
+                            <i class="ri-fullscreen-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart2"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: PAX & Maintenance -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">PAX & Maintenance</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="zoneFilter3" class="chart-zone-filter" onchange="updateChart(3)">
+                            <option value="all">Toutes les zones</option>
+                        </select>
+                        <button class="btn btn-icon" onclick="openChartModal(3)" title="Agrandir">
+                            <i class="ri-fullscreen-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart3"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card animate-enter" style="animation-delay: 300ms">
+            <div class="card-header">
+                <h2 class="card-title">Détail des Zones</h2>
+            </div>
+            <div class="table-controls">
+                <div class="search-input">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="searchZone" placeholder="Rechercher une zone..."
+                        oninput="applyFiltersAndSort()">
+                </div>
+                <div style="flex: 1;"></div>
+                <select id="rowLimit" onchange="applyFiltersAndSort()" style="width: auto;">
+                    <option value="10">10 lignes</option>
+                    <option value="30" selected>30 lignes</option>
+                    <option value="50">50 lignes</option>
+                    <option value="all">Tout afficher</option>
+                </select>
+            </div>
+
+            <div class="table-container" style="overflow-x: auto;">
+                <div id="tableContent">
+                    <div class="loading-state">Chargement du tableau...</div>
+                </div>
+                <div id="displayInfo"
+                    style="padding: 1rem 1.5rem; color: var(--text-muted); font-size: 0.875rem; text-align: right;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Fullscreen Chart Modal -->
+        <div id="chartModal" class="chart-modal" onclick="closeChartModal(event)">
+            <div class="chart-modal-content">
+                <div class="chart-modal-header">
+                    <h2 id="modalChartTitle">Graphique</h2>
+                    <button class="btn btn-icon" onclick="closeChartModal(event)" title="Fermer">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="chart-modal-body">
+                    <canvas id="modalChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Widget -->
+        <div id="chatbotWidget" class="chatbot-widget">
+            <div class="chatbot-header">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="chatbot-avatar"><img src="img/chatbot-avatar.png" alt="Chat"
+                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 0.95rem; font-weight: 600;">Le Chat de DATALIAN</h3>
+                    </div>
+                </div>
+                <button class="btn btn-icon" onclick="toggleChatbot()" title="Fermer">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="chatbot-message chatbot-message-bot">
+                    <div class="chatbot-message-avatar"><img src="img/chatbot-avatar.png" alt="Chat"
+                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>
+                    <div class="chatbot-message-content">
+                        Bonjour ! Je suis Le Chat de DATALIAN, votre assistant intelligent pour analyser les données de
+                        nettoyage
+                        aéroportuaire. Posez-moi vos questions sur les zones, PAX, durées, alertes, ou tendances !
+                    </div>
+                </div>
+            </div>
+            <div class="chatbot-input-container">
+                <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Posez votre question..."
+                    onkeypress="handleChatbotKeyPress(event)" />
+                <button class="btn btn-primary" onclick="sendChatbotMessage()" id="chatbotSendBtn">
+                    <i class="ri-send-plane-fill"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chatbot Floating Button -->
+        <button class="chatbot-fab" onclick="toggleChatbot()" id="chatbotFab" title="Ouvrir l'assistant IA">
+            <i class="ri-robot-2-fill"></i>
+        </button>
+
+        <footer class="footer">
+            <p>&copy; 2025 Atalian Global Services &bull; Dashboard Analytics</p>
+        </footer>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        // Theme Logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+            updateChartTheme(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.className = 'ri-sun-line';
+            } else {
+                icon.className = 'ri-moon-line';
+            }
+        }
+
+        function updateChartTheme(theme) {
+            const isDark = theme === 'dark';
+            Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+            [chart1, chart2, chart3].forEach(chart => {
+                if (chart && chart.options.scales.y) {
+                    chart.options.scales.y.grid.color = isDark ? '#334155' : '#f1f5f9';
+                    chart.update();
+                }
+            });
+        }
+
+        // Init Theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.addEventListener('DOMContentLoaded', () => updateThemeIcon(savedTheme));
+
+        // Professional Icon Mapping (RemixIcon)
+        const getZoneIcon = (index) => {
+            const icons = [
+                'ri-building-4-line',
+                'ri-community-line',
+                'ri-store-2-line',
+                'ri-hotel-line',
+                'ri-building-2-line',
+                'ri-government-line'
+            ];
+            return icons[index % icons.length];
+        };
+
+        let availableDates = [];
+        let currentDateIndex = 0;
+        let chart1 = null;
+        let chart2 = null;
+        let chart3 = null;
+        let allMetrics = [];
+        let allZones = [];
+        let allMetricsByDate = {};
+        let sortColumn = null;
+        let sortDirection = 'asc';
+
+        // Initialize
+        async function loadAvailableDates() {
+            try {
+                const response = await fetch(`${API_URL}/metrics/dates/available`);
+                const data = await response.json();
+                availableDates = data.dates;
+
+                const selector = document.getElementById('dateSelector');
+                selector.innerHTML = availableDates.map((date, index) => {
+                    const dateObj = new Date(date);
+                    const formatted = dateObj.toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    return `<option value="${index}">${formatted}</option>`;
+                }).join('');
+
+                currentDateIndex = 0;
+                await loadDate(availableDates[0]);
+                await loadChartsData();
+
+            } catch (error) {
+                console.error('Error loading dates:', error);
+                document.getElementById('statsGrid').innerHTML =
+                    '<div class="error-state"><i class="ri-error-warning-line"></i> Connexion au serveur échouée</div>';
+            }
+        }
+
+        async function loadDate(date) {
+            try {
+                const [statsRes, metricsRes] = await Promise.all([
+                    fetch(`${API_URL}/metrics/stats/summary?date=${date}`),
+                    fetch(`${API_URL}/metrics?date=${date}`)
+                ]);
+
+                const stats = await statsRes.json();
+                const metricsData = await metricsRes.json();
+
+                allMetrics = metricsData.data;
+                renderStats(stats);
+                applyFiltersAndSort();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('statsGrid').innerHTML =
+                    '<div class="error-state">Erreur de chargement des données</div>';
+            }
+        }
+
+        // Animation Helper: Count Up
+        function animateValue(obj, start, end, duration, isFloat = false, suffix = '') {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                // EaseOutQuart
+                const easedProgress = 1 - Math.pow(1 - progress, 4);
+                const currentVal = progress * (end - start) + start;
+
+                if (isFloat) {
+                    obj.innerHTML = currentVal.toLocaleString('fr-FR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }) + suffix;
+                } else {
+                    obj.innerHTML = Math.floor(currentVal).toLocaleString('fr-FR') + suffix;
+                }
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    // Ensure final value is exact
+                    if (isFloat) {
+                        obj.innerHTML = end.toLocaleString('fr-FR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }) + suffix;
+                    } else {
+                        obj.innerHTML = end.toLocaleString('fr-FR') + suffix;
+                    }
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function renderStats(stats) {
+            // Configuration for each KPI
+            // isFloat: true if we want decimals
+            // suffix: e.g. 'h' for hours
+            const kpiConfig = [
+                {
+                    id: 'kpi-zones',
+                    label: 'Total Zones',
+                    value: stats.totalZones,
+                    icon: 'ri-map-pin-line',
+                    isFloat: false,
+                    suffix: ''
+                },
+                {
+                    id: 'kpi-pax',
+                    label: 'Total PAX',
+                    value: stats.totalPax,
+                    icon: 'ri-group-line',
+                    isFloat: false,
+                    suffix: ''
+                },
+                {
+                    id: 'kpi-maint',
+                    label: 'Heures Maintenance',
+                    value: stats.totalMaintenanceHours,
+                    icon: 'ri-tools-line',
+                    isFloat: true,
+                    suffix: 'h'
+                },
+                {
+                    id: 'kpi-renfort',
+                    label: 'Heures Renfort',
+                    value: stats.totalAdditionnelleHours,
+                    icon: 'ri-time-line',
+                    isFloat: true,
+                    suffix: 'h'
+                }
+            ];
+
+            // 1. Generate HTML
+            const statsHtml = kpiConfig.map((kpi, index) => `
+                <div class="stat-card animate-enter" style="animation-delay: ${index * 100}ms">
+                    <div class="stat-header">
+                        <span class="stat-label">${kpi.label}</span>
+                        <i class="${kpi.icon} stat-icon"></i>
+                    </div>
+                    <div class="stat-value" id="${kpi.id}">0${kpi.suffix}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('statsGrid').innerHTML = statsHtml;
+
+            // 2. Trigger Animations
+            kpiConfig.forEach(kpi => {
+                const el = document.getElementById(kpi.id);
+                if (el) {
+                    animateValue(el, 0, kpi.value, 500, kpi.isFloat, kpi.suffix);
+                }
+            });
+        }
+
+
+
+
+        // Load charts data with zone filtering
+        async function loadChartsData() {
+            try {
+                // Load detailed metrics for each date
+                const metricsPromises = availableDates.map(date =>
+                    fetch(`${API_URL}/metrics?date=${date}`)
+                        .then(r => r.json())
+                        .then(data => ({ date, metrics: data.data }))
+                );
+
+                const allData = await Promise.all(metricsPromises);
+
+                // Organize data
+                allMetricsByDate = {};
+                const zonesSet = new Set();
+
+                allData.forEach(({ date, metrics }) => {
+                    allMetricsByDate[date] = metrics;
+                    metrics.forEach(m => zonesSet.add(m.zoneName));
+                });
+
+                allZones = Array.from(zonesSet).sort();
+
+                // Populate zone filters
+                populateZoneFilters();
+
+                // Set Chart.js defaults
+                Chart.defaults.font.family = "'Inter', sans-serif";
+                Chart.defaults.color = '#64748b';
+
+                // Create all charts
+                createChart1();
+                createChart2();
+                createChart3();
+
+            } catch (error) {
+                console.error('Error loading charts data:', error);
+            }
+        }
+
+        function populateZoneFilters() {
+            [1, 2, 3].forEach(chartNum => {
+                const select = document.getElementById(`zoneFilter${chartNum}`);
+                const zonesHtml = allZones.map(zone =>
+                    `<option value="${zone}">${zone}</option>`
+                ).join('');
+                select.innerHTML = '<option value="all">Toutes les zones</option>' + zonesHtml;
+            });
+        }
+
+        function getChartData(zoneFilter) {
+            const chartDates = availableDates.map(d =>
+                new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+            ).reverse();
+
+            const reversedDates = [...availableDates].reverse();
+
+            if (zoneFilter === 'all') {
+                // Aggregate all zones
+                const aggregated = reversedDates.map(date => {
+                    const metrics = allMetricsByDate[date] || [];
+                    return {
+                        totalPax: metrics.reduce((sum, m) => sum + (m.paxTotal || 0), 0),
+                        totalMaintenanceHours: metrics.reduce((sum, m) =>
+                            sum + ((m.dureeMaintenanceSeconds || 0) / 3600), 0),
+                        totalAdditionnelleHours: metrics.reduce((sum, m) =>
+                            sum + ((m.dureeAdditionnelleSeconds || 0) / 3600), 0),
+                        totalAlerts: metrics.reduce((sum, m) => sum + (m.alertWOs || 0), 0)
+                    };
+                });
+                return { dates: chartDates, data: aggregated };
+            } else {
+                // Filter for specific zone
+                const zoneData = reversedDates.map(date => {
+                    const metrics = allMetricsByDate[date] || [];
+                    const zoneMetric = metrics.find(m => m.zoneName === zoneFilter) || {};
+                    return {
+                        totalPax: zoneMetric.paxTotal || 0,
+                        totalMaintenanceHours: (zoneMetric.dureeMaintenanceSeconds || 0) / 3600,
+                        totalAdditionnelleHours: (zoneMetric.dureeAdditionnelleSeconds || 0) / 3600,
+                        totalAlerts: zoneMetric.alertWOs || 0
+                    };
+                });
+                return { dates: chartDates, data: zoneData };
+            }
+        }
+
+        function getChartOptions(yLabel, y1Label) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: { boxWidth: 10, usePointStyle: true }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: yLabel,
+                            font: { size: 12, weight: '600' }
+                        },
+                        grid: { color: '#f1f5f9' },
+                        ticks: { callback: v => v.toLocaleString('fr-FR') }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: y1Label,
+                            font: { size: 12, weight: '600' }
+                        },
+                        grid: { display: false },
+                        ticks: { callback: v => v.toLocaleString('fr-FR') }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            };
+        }
+
+        function createChart1() {
+            const ctx = document.getElementById('chart1').getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter1').value;
+            const { dates, data } = getChartData(zoneFilter);
+
+            if (chart1) chart1.destroy();
+
+            chart1 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'PAX',
+                            data: data.map(d => d.totalPax),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Renfort (h)',
+                            data: data.map(d => d.totalAdditionnelleHours.toFixed(2)),
+                            borderColor: '#f59e0b',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: getChartOptions('PAX', 'Heures Renfort')
+            });
+        }
+
+        function createChart2() {
+            const ctx = document.getElementById('chart2').getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter2').value;
+            const { dates, data } = getChartData(zoneFilter);
+
+            if (chart2) chart2.destroy();
+
+            chart2 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'PAX',
+                            data: data.map(d => d.totalPax),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Alertes',
+                            data: data.map(d => d.totalAlerts),
+                            borderColor: '#ef4444',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: getChartOptions('PAX', 'Alertes')
+            });
+        }
+
+        function createChart3() {
+            const ctx = document.getElementById('chart3').getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter3').value;
+            const { dates, data } = getChartData(zoneFilter);
+
+            if (chart3) chart3.destroy();
+
+            chart3 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'PAX',
+                            data: data.map(d => d.totalPax),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Maintenance (h)',
+                            data: data.map(d => d.totalMaintenanceHours.toFixed(2)),
+                            borderColor: '#10b981',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: getChartOptions('PAX', 'Heures Maintenance')
+            });
+        }
+
+        function updateChart(chartNum) {
+            switch (chartNum) {
+                case 1: createChart1(); break;
+                case 2: createChart2(); break;
+                case 3: createChart3(); break;
+            }
+        }
+
+
+        // Table & Filtering Logic
+        function loadSelectedDate() {
+            const selector = document.getElementById('dateSelector');
+            const val = selector.value;
+            if (val === "") return;
+            currentDateIndex = parseInt(val);
+            loadDate(availableDates[currentDateIndex]);
+        }
+
+        function navigateDate(direction) {
+            const newIndex = currentDateIndex + direction;
+            if (newIndex >= 0 && newIndex < availableDates.length) {
+                currentDateIndex = newIndex;
+                document.getElementById('dateSelector').value = currentDateIndex;
+                loadDate(availableDates[currentDateIndex]);
+            }
+        }
+
+
+        // Modal functions
+        let modalChart = null;
+        let currentModalChartNum = null;
+
+        function openChartModal(chartNum) {
+            const modal = document.getElementById('chartModal');
+            const modalTitle = document.getElementById('modalChartTitle');
+            const zoneFilter = document.getElementById(`zoneFilter${chartNum}`).value;
+
+            // Set title based on chart number
+            const titles = {
+                1: 'PAX & Renfort',
+                2: 'PAX & Alertes',
+                3: 'PAX & Maintenance'
+            };
+            modalTitle.textContent = titles[chartNum];
+
+            // Show modal
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Store current chart number
+            currentModalChartNum = chartNum;
+
+            // Create chart in modal
+            setTimeout(() => {
+                createModalChart(chartNum, zoneFilter);
+            }, 100);
+        }
+
+        function closeChartModal(event) {
+            if (event) {
+                // Only close if clicking on backdrop or close button
+                if (event.target.id !== 'chartModal' && !event.target.closest('.ri-close-line')) {
+                    return;
+                }
+                event.stopPropagation();
+            }
+
+            const modal = document.getElementById('chartModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+
+            // Destroy modal chart
+            if (modalChart) {
+                modalChart.destroy();
+                modalChart = null;
+            }
+        }
+
+        function createModalChart(chartNum, zoneFilter) {
+            const canvas = document.getElementById('modalChart');
+            const container = canvas.parentElement;
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas dimensions based on container
+            canvas.width = container.clientWidth - 64; // padding
+            canvas.height = container.clientHeight - 64;
+
+            const { dates, data } = getChartData(zoneFilter);
+
+            if (modalChart) modalChart.destroy();
+
+            const chartConfigs = {
+                1: {
+                    label2: 'Renfort (h)',
+                    data2: data.map(d => d.totalAdditionnelleHours.toFixed(2)),
+                    color2: '#f59e0b',
+                    y1Label: 'Heures Renfort'
+                },
+                2: {
+                    label2: 'Alertes',
+                    data2: data.map(d => d.totalAlerts),
+                    color2: '#ef4444',
+                    y1Label: 'Alertes'
+                },
+                3: {
+                    label2: 'Maintenance (h)',
+                    data2: data.map(d => d.totalMaintenanceHours.toFixed(2)),
+                    color2: '#10b981',
+                    y1Label: 'Heures Maintenance'
+                }
+            };
+
+            const config = chartConfigs[chartNum];
+
+            modalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'PAX',
+                            data: data.map(d => d.totalPax),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: config.label2,
+                            data: config.data2,
+                            borderColor: config.color2,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    ...getChartOptions('PAX', config.y1Label),
+                    maintainAspectRatio: true,
+                    aspectRatio: 2.5
+                }
+            });
+        }
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('chartModal').classList.contains('active')) {
+                closeChartModal();
+            }
+        });
+
+
+        // Table & Filtering Logic
+        function applyFiltersAndSort() {
+            const searchTerm = document.getElementById('searchZone').value.toLowerCase();
+            const rowLimit = document.getElementById('rowLimit').value;
+
+            let filteredMetrics = allMetrics.filter(metric =>
+                metric.zoneName.toLowerCase().includes(searchTerm) ||
+                metric.zoneId.toLowerCase().includes(searchTerm)
+            );
+
+            if (sortColumn) {
+                filteredMetrics.sort((a, b) => {
+                    let aVal, bVal;
+                    switch (sortColumn) {
+                        case 'zone': aVal = a.zoneName.toLowerCase(); bVal = b.zoneName.toLowerCase(); break;
+                        case 'maintenance': aVal = a.occurrencesMaintenance || 0; bVal = b.occurrencesMaintenance || 0; break;
+                        case 'additionnelles': aVal = a.occurrencesAdditionnelles || 0; bVal = b.occurrencesAdditionnelles || 0; break;
+                        case 'alertes': aVal = a.alertWOs || 0; bVal = b.alertWOs || 0; break;
+                        case 'pax': aVal = a.paxTotal || 0; bVal = b.paxTotal || 0; break;
+                        case 'duree':
+                            const aT = (a.dureeMaintenanceSeconds || 0) + (a.dureeAdditionnelleSeconds || 0);
+                            const aO = (a.occurrencesMaintenance || 0) + (a.occurrencesAdditionnelles || 0);
+                            aVal = aO > 0 ? aT / aO : 0;
+                            const bT = (b.dureeMaintenanceSeconds || 0) + (b.dureeAdditionnelleSeconds || 0);
+                            const bO = (b.occurrencesMaintenance || 0) + (b.occurrencesAdditionnelles || 0);
+                            bVal = bO > 0 ? bT / bO : 0;
+                            break;
+                    }
+                    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            const total = filteredMetrics.length;
+            const displayMetrics = rowLimit === 'all' ? filteredMetrics : filteredMetrics.slice(0, parseInt(rowLimit));
+
+            document.getElementById('displayInfo').textContent = `${displayMetrics.length} résultats / ${total}`;
+            renderTable(displayMetrics);
+        }
+
+        function sortBy(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            applyFiltersAndSort();
+        }
+
+        function renderTable(metrics) {
+            let tableHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortBy('zone')">Zone <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('maintenance')">Occurrences <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('additionnelles')">Additionnelles <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('alertes')">Alertes <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('pax')">PAX <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                            <th onclick="sortBy('duree')" style="text-align: right;">Durée Moy. <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            metrics.forEach((metric, index) => {
+                const totalSeconds = (metric.dureeMaintenanceSeconds || 0) + (metric.dureeAdditionnelleSeconds || 0);
+                const totalOcc = (metric.occurrencesMaintenance || 0);
+                const avgMin = totalOcc > 0 ? Math.round(totalSeconds / totalOcc / 60) : 0;
+
+                tableHtml += `
+                    <tr>
+                        <td>
+                            <div class="cell-zone">
+                                <div class="cell-icon">
+                                    <i class="${getZoneIcon(index)}"></i>
+                                </div>
+                                <div class="cell-info">
+                                    <span style="font-weight: 500;">${metric.zoneName}</span>
+                                    <span class="cell-sub">${metric.zoneId.split('/').pop()}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-neutral">${metric.occurrencesMaintenance || 0}</span>
+                        </td>
+                        <td>
+                            ${(metric.occurrencesAdditionnelles || 0) > 0
+                        ? `<span class="badge badge-warning">${metric.occurrencesAdditionnelles}</span>`
+                        : '<span style="color: var(--text-muted);">-</span>'}
+                        </td>
+                        <td>
+                            ${(metric.alertWOs || 0) > 0
+                        ? `<span class="badge badge-danger">${metric.alertWOs}</span>`
+                        : '<span style="color: var(--text-muted);">-</span>'}
+                        </td>
+                        <td style="font-weight: 600; font-family: monospace;">
+                            ${(metric.paxTotal || 0).toLocaleString('fr-FR')}
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="badge badge-success">${avgMin} min</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `</tbody></table>`;
+            document.getElementById('tableContent').innerHTML = tableHtml;
+        }
+
+        // ========================================
+        // CHATBOT FUNCTIONS
+        // ========================================
+
+        function toggleChatbot() {
+            const widget = document.getElementById('chatbotWidget');
+            const fab = document.getElementById('chatbotFab');
+
+            if (widget.classList.contains('chatbot-widget-open')) {
+                widget.classList.remove('chatbot-widget-open');
+                fab.style.display = 'flex';
+            } else {
+                widget.classList.add('chatbot-widget-open');
+                fab.style.display = 'none';
+                document.getElementById('chatbotInput').focus();
+            }
+        }
+
+        function handleChatbotKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatbotMessage();
+            }
+        }
+
+        async function sendChatbotMessage() {
+            const input = document.getElementById('chatbotInput');
+            const question = input.value.trim();
+
+            if (!question) return;
+
+            // Add user message
+            addChatbotMessage(question, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            const typingId = addChatbotTypingIndicator();
+
+            try {
+                const response = await fetch(`${API_URL}/chat/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await response.json();
+
+                // Remove typing indicator
+                removeChatbotTypingIndicator(typingId);
+
+                if (data.success) {
+                    addChatbotMessage(data.response, 'bot');
+                } else {
+                    addChatbotMessage('Désolé, une erreur s\'est produite. Veuillez réessayer.', 'bot');
+                }
+
+            } catch (error) {
+                console.error('Chatbot error:', error);
+                removeChatbotTypingIndicator(typingId);
+                addChatbotMessage('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.', 'bot');
+            }
+        }
+
+        function addChatbotMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chatbot-message chatbot-message-${sender}`;
+
+            if (sender === 'bot') {
+                messageDiv.innerHTML = `
+                    <div class="chatbot-message-avatar"><img src="img/chatbot-avatar.png" alt="Chat" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>
+                    <div class="chatbot-message-content">${text}</ div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="chatbot-message-content">${text}</div>
+                    <div class="chatbot-message-avatar">👤</div>
+                `;
+            }
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addChatbotTypingIndicator() {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chatbot-message chatbot-message-bot chatbot-typing';
+            typingDiv.id = 'chatbot-typing-' + Date.now();
+
+            typingDiv.innerHTML = `
+                <div class="chatbot-message-avatar"><img src="img/chatbot-avatar.png" alt="Chat" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>
+                <div class="chatbot-message-content">
+                    <div class="chatbot-typing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            return typingDiv.id;
+        }
+
+        function removeChatbotTypingIndicator(id) {
+            const typingDiv = document.getElementById(id);
+            if (typingDiv) {
+                typingDiv.remove();
+            }
+        }
+
+        loadAvailableDates();
+    </script>
+</body>
+
+</html>
