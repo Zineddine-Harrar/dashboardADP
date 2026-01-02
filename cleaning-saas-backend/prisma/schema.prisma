@@ -30,6 +30,13 @@ model DailyZoneCleaningMetrics {
   // Duration metrics in seconds
   dureeMaintenanceSeconds    Int?     @default(0)
   dureeAdditionnelleSeconds  Int?     @default(0)
+  dureeAlertesSeconds        Int?     @default(0) // For Alerts (ALERTE/SPM)
+  dureeSpecificSeconds       Int?     @default(0) // For Specific tasks
+  
+  // Visit tracking (from ZoneKpi sheet)
+  minVisits                  Int?     @default(0)
+  maxVisits                  Int?     @default(0)
+  nbVisits                   Int?     @default(0)
   
   // Metadata
   createdAt                  DateTime @default(now())
@@ -45,33 +52,27 @@ model DailyZoneCleaningMetrics {
   @@map("daily_zone_cleaning_metrics")
 }
 
-/// Chat interaction logs for analytics and improvement
+/// Chat interaction logs
 model ChatLog {
-  id                Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   
-  // Question and response
-  question          String   @db.Text
-  response          String?  @db.Text
+  // Interaction details
+  question        String    @db.Text
+  response        String?   @db.Text
+  responseTimeMs  Int?
+  success         Boolean   @default(true)
+  errorMessage    String?   @db.Text
   
-  // Performance metrics
-  responseTimeMs    Int?
-  success           Boolean  @default(true)
-  errorMessage      String?  @db.Text
-  
-  // Context
-  dateContext       DateTime? @db.Date
+  // Context date (if question was about a specific date)
+  dateContext     DateTime? @db.Date
   
   // User feedback
-  userFeedback      Int?     // 1 = 👍, -1 = 👎, null = pas encore noté
-  feedbackDate      DateTime?
+  userFeedback    Int?      // 1 = thumbs up, -1 = thumbs down, 0 or null = none
+  feedbackDate    DateTime?
   
   // Metadata
-  createdAt         DateTime @default(now())
-  
-  // Index for analytics queries
-  @@index([createdAt])
-  @@index([success])
-  @@index([userFeedback])
+  createdAt       DateTime  @default(now())
   
   @@map("chat_logs")
 }
+

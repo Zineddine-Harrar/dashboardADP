@@ -5,6 +5,7 @@ import { EtlModule } from './etl/etl.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
 import { UploadController } from './api/upload.controller';
+import { ChatbotModule } from './chatbot/chatbot.module';
 
 /**
  * Root application module

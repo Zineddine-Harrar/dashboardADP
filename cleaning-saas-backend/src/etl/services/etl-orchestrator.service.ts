@@ -85,6 +85,12 @@ export class EtlOrchestratorService {
                         paxTotal: metric.paxTotal,
                         dureeMaintenanceSeconds: metric.dureeMaintenanceSeconds,
                         dureeAdditionnelleSeconds: metric.dureeAdditionnelleSeconds,
+                        dureeAlertesSeconds: metric.dureeAlertesSeconds,
+                        dureeSpecificSeconds: metric.dureeSpecificSeconds,
+                        alertWOs: metric.alertWOs,
+                        minVisits: metric.minVisits,
+                        maxVisits: metric.maxVisits,
+                        nbVisits: metric.nbVisits,
                     },
                     create: {
                         date: metric.date,
@@ -95,6 +101,12 @@ export class EtlOrchestratorService {
                         paxTotal: metric.paxTotal,
                         dureeMaintenanceSeconds: metric.dureeMaintenanceSeconds,
                         dureeAdditionnelleSeconds: metric.dureeAdditionnelleSeconds,
+                        dureeAlertesSeconds: metric.dureeAlertesSeconds,
+                        dureeSpecificSeconds: metric.dureeSpecificSeconds,
+                        alertWOs: metric.alertWOs,
+                        minVisits: metric.minVisits,
+                        maxVisits: metric.maxVisits,
+                        nbVisits: metric.nbVisits,
                     },
                 });
                 insertedCount++;

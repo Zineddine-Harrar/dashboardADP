@@ -1,0 +1,943 @@
+Sheet names: ['AbsenceReason', 'Action', 'ActionOfTaskProgram', 'Agent', 'AgentAbsenceEvent', 'AgentAvailability', 'AgentCapability', 'AgentCertification', 'AgentDemandCategoryKpi', 'AgentExecutionKpi', 'AgentKpi', 'AgentNotification', 'AgentTimeBreakdownKpi', 'Alert', 'AlertOnProduct', 'AssignmentExecutionData', 'AvailableCapabilityKpi', 'AvailableCertificationKpi', 'BreakExecutionData', 'BreakOverride', 'BreakType', 'Certification', 'CertificationKpi', 'CertificationRequirement', 'CrowdInformation', 'DemandCategory', 'Direction', 'ExecutionKpi', 'Gate', 'GlobalKpi', 'GlobalParameter', 'GlobalTimeBreakdownKpi', 'InterOccurrencePolicy', 'Issue', 'IssueOnProduct', 'LearningCompletion', 'LearningItem', 'LearningItemExecutionData', 'Manager', 'ManagerNotification', 'MissedWorkOrder', 'NonConformityEvent', 'NonConformityStatusUpdate', 'NonDailyDemand', 'PaxFlow', 'PlannableZonedTaskProgramKpi', 'PlannedAssignment', 'PlannedAssignmentExecutionKpi', 'PlannedBreak', 'PlannedBreakExecutionKpi', 'PlannedLearningItem', 'PlannedOrder', 'PlannedQualityControl', 'PlannedTravel', 'PlanningParameter', 'Product', 'ProductReference', 'Profile', 'ProfileCapability', 'QualityControlExecutionData', 'ReinforcementParameter', 'ReschedulingWarmStartIssue', 'ScheduledFlight', 'ShiftExecutionData', 'ShiftType', 'Skill', 'SkillKpi', 'SkillLevel', 'SkillRequirement', 'TaskProgram', 'TravelTime', 'UnitOfMeasure', 'WorkOrder', 'WorkOrderCompletion', 'Zone', 'ZoneCertificationRequirement', 'ZoneDemandCategoryKpi', 'ZoneGroup', 'ZoneGroupOccurrenceKpi', 'ZoneGroupReinforcementOverride', 'ZoneKpi', 'ZoneShutdown', 'ZonedReinforcementOverride', 'ZonedTaskProgramOverride', 'GeneIssue', 'GeneParameter', 'GeneSchemaIssue']
+
+--- Sheet: AbsenceReason ---
+Columns: ['description', 'id']
+Shape: (15, 2)
+First 5 rows:
+                 description     id
+0        ABSENCE NON MOTIVEE    ANM
+1      HEURE JOUR FERIE PAYE     JF
+2  ABSENCE CONGES SANS SOLDE    CSS
+3   ABSENCE CONGES TRANSFERT  CPN-1
+4            ABSENCE MALADIE    MLA
+------------------------------
+
+--- Sheet: Action ---
+Columns: ['id', 'name']
+Shape: (25, 2)
+First 5 rows:
+       id                            name
+0  act001                   Dépoussièrage
+1  act002                       Nettoyage
+2  act003    Retrait des déchets collants
+3  act004  Nettoyage des traces de doigts
+4  act005                        Balayage
+------------------------------
+
+--- Sheet: ActionOfTaskProgram ---
+Columns: ['action.id', 'taskProgram.id']
+Shape: (1770, 2)
+First 5 rows:
+  action.id                                       taskProgram.id
+0    act010  STANDARD_PERIODIQUE_Barre de protection inox au sol
+1    act002  STANDARD_PERIODIQUE_Barre de protection inox au sol
+2    act003     STANDARD_PERIODIQUE_Boitier vert ouverture porte
+3    act002     STANDARD_PERIODIQUE_Boitier vert ouverture porte
+4    act001     STANDARD_PERIODIQUE_Boitier vert ouverture porte
+------------------------------
+
+--- Sheet: Agent ---
+Columns: ['firstName', 'id', 'lastName', 'defaultShift.id', 'profile.id']
+Shape: (83, 5)
+First 5 rows:
+  firstName    id  lastName defaultShift.id  profile.id
+0     MAMOU  ag11   NIAKATE  CDI_morning_12         NaN
+1      FODE  ag12   DIAGANA   CDI_morning_2         NaN
+2    DAHBIA  ag15  RAHMOUNE   CDI_morning_1         NaN
+3     ZAHIA  ag16  BERRICHI   CDI_morning_2         NaN
+4     KELLY  ag19   DUARTE    CDI_morning_2         NaN
+------------------------------
+
+--- Sheet: AgentAbsenceEvent ---
+Columns: ['reason', 'timestamp', 'agent.id']
+Shape: (1, 3)
+First 5 rows:
+  reason               timestamp agent.id
+0  AUTRE 2025-12-03 08:57:55.521    ag103
+------------------------------
+
+--- Sheet: AgentAvailability ---
+Columns: ['date', 'endTimeOverride', 'startTimeOverride', 'agent.id', 'manager.id']
+Shape: (28, 5)
+First 5 rows:
+        date  endTimeOverride  startTimeOverride agent.id manager.id
+0 2025-12-03              NaN                NaN    ag115       mng7
+1 2025-12-03              NaN                NaN    ag103       mng7
+2 2025-12-03              NaN                NaN     ag66       mng7
+3 2025-12-03              NaN                NaN     ag96       mng7
+4 2025-12-03              NaN                NaN     ag95       mng7
+------------------------------
+
+--- Sheet: AgentCapability ---
+Columns: ['agent.id', 'skill.id', 'skillLevel.id']
+Shape: (731, 3)
+First 5 rows:
+  agent.id skill.id skillLevel.id
+0      ag1      net        NORMAL
+1      ag1       re        NORMAL
+2      ag1       si        NORMAL
+3      ag1     inox        NORMAL
+4      ag1   inoxgc        NORMAL
+------------------------------
+
+--- Sheet: AgentCertification ---
+Columns: ['agent.id', 'certification.id']
+Shape: (52, 2)
+First 5 rows:
+  agent.id certification.id
+0     ag27      reserved F2
+1    ag115               F1
+2    ag115           SLB F1
+3    ag103               F1
+4    ag103           SLB F1
+------------------------------
+
+--- Sheet: AgentDemandCategoryKpi ---
+Columns: ['nbWorkOrdersPlanned', 'agent.id', 'demandCategory.id']
+Shape: (38, 3)
+First 5 rows:
+   nbWorkOrdersPlanned agent.id demandCategory.id
+0                   59     ag35         ENTRETIEN
+1                   53     ag39         ENTRETIEN
+2                    2     ag66               SPM
+3                   53     ag25         ENTRETIEN
+4                    6    ag105           RENFORT
+------------------------------
+
+--- Sheet: AgentExecutionKpi ---
+Columns: ['breakExcessStatus', 'nbAssignmentsCompletedEarly', 'nbAssignmentsCompletedLate', 'nbAssignmentsCompletedOnTime', 'nbAssignmentsStartedEarly', 'nbAssignmentsStartedLate', 'nbAssignmentsStartedOnTime', 'status', 'agent.id']
+Shape: (83, 9)
+First 5 rows:
+   breakExcessStatus  nbAssignmentsCompletedEarly  nbAssignmentsCompletedLate  nbAssignmentsCompletedOnTime  nbAssignmentsStartedEarly  nbAssignmentsStartedLate  nbAssignmentsStartedOnTime       status agent.id
+0                  0                            0                           0                             0                          0                         0                           0  Not started     ag11
+1                  0                            0                           0                             0                          0                         0                           0  Not started     ag12
+2                  1                            0                           2                            12                          0                         1                          13      On time     ag15
+3                  0                            0                           0                             0                          0                         0                           0  Not started     ag16
+4                  0                            0                           0                             0                          0                         0                           0  Not started     ag19
+------------------------------
+
+--- Sheet: AgentKpi ---
+Columns: ['nbZoneChange', 'agent.id']
+Shape: (28, 2)
+First 5 rows:
+   nbZoneChange agent.id
+0            12    ag115
+1            15     ag24
+2            14     ag43
+3            10     ag55
+4             7     ag23
+------------------------------
+
+--- Sheet: AgentNotification ---
+Columns: ['acknowledgedTimestamp', 'isAcknowledged', 'timestamp', 'type', 'agent.id', 'plannedAssignment.id']
+Shape: (0, 6)
+First 5 rows:
+Empty DataFrame
+Columns: [acknowledgedTimestamp, isAcknowledged, timestamp, type, agent.id, plannedAssignment.id]
+Index: []
+------------------------------
+
+--- Sheet: AgentTimeBreakdownKpi ---
+Columns: ['activityType', 'plannedDuration', 'timeRatio', 'agent.id']
+Shape: (135, 4)
+First 5 rows:
+         activityType plannedDuration  timeRatio agent.id
+0               BREAK 0 days 00:30:00   0.071429    ag115
+1  SHIFT_ENDING_SETUP 0 days 00:10:00   0.023810    ag115
+2              TRAVEL 0 days 00:42:23   0.100913    ag115
+3                IDLE 0 days 00:25:40   0.061111    ag115
+4                WORK 0 days 05:11:57   0.742738    ag115
+------------------------------
+
+--- Sheet: Alert ---
+Columns: ['timestamp', 'manager.id', 'zone.id']
+Shape: (0, 3)
+First 5 rows:
+Empty DataFrame
+Columns: [timestamp, manager.id, zone.id]
+Index: []
+------------------------------
+
+--- Sheet: AlertOnProduct ---
+Columns: ['message', 'quantity', 'resource', 'woGenerated', 'woGenerationDetails', 'alert.timestamp', 'alert.manager.id', 'taskProgram.id']
+Shape: (0, 8)
+First 5 rows:
+Empty DataFrame
+Columns: [message, quantity, resource, woGenerated, woGenerationDetails, alert.timestamp, alert.manager.id, taskProgram.id]
+Index: []
+------------------------------
+
+--- Sheet: AssignmentExecutionData ---
+Columns: ['message', 'timestamp', 'type', 'plannedAssignment.id']
+Shape: (448, 4)
+First 5 rows:
+  message               timestamp   type                                                                                                                              plannedAssignment.id
+0     NaN 2025-12-03 05:23:46.662  START  HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2_ag15_06:13
+1     NaN 2025-12-03 05:25:27.166  START                             HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56_ag99_06:42
+2     NaN 2025-12-03 05:31:45.517  START                             HYBRID_ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1_ag66_06:35
+3     NaN 2025-12-03 05:32:08.288  START          HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2_ag39_06:42
+4     NaN 2025-12-03 05:41:53.599  START                            HYBRID_ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1_ag115_07:02
+------------------------------
+
+--- Sheet: AvailableCapabilityKpi ---
+Columns: ['shiftStart', 'agent.id', 'skill.id', 'skillLevel.id']
+Shape: (0, 4)
+First 5 rows:
+Empty DataFrame
+Columns: [shiftStart, agent.id, skill.id, skillLevel.id]
+Index: []
+------------------------------
+
+--- Sheet: AvailableCertificationKpi ---
+Columns: ['shiftStart', 'agent.id', 'certification.id']
+Shape: (0, 3)
+First 5 rows:
+Empty DataFrame
+Columns: [shiftStart, agent.id, certification.id]
+Index: []
+------------------------------
+
+--- Sheet: BreakExecutionData ---
+Columns: ['timestamp', 'type', 'plannedBreak.name', 'plannedBreak.agent.id']
+Shape: (101, 4)
+First 5 rows:
+                timestamp   type plannedBreak.name plannedBreak.agent.id
+0 2025-12-03 07:40:55.882  START   CDI_morning_2_2                  ag66
+1 2025-12-03 07:43:04.474    END   CDI_morning_2_2                  ag66
+2 2025-12-03 07:53:18.445  START   CDI_morning_2_2                  ag96
+3 2025-12-03 08:02:47.854    END   CDI_morning_2_2                  ag96
+4 2025-12-03 08:02:57.516  START   CDI_morning_5_2                  ag37
+------------------------------
+
+--- Sheet: BreakOverride ---
+Columns: ['date', 'duration', 'earliestStartTime', 'latestEndTime', 'name', 'agent.id']
+Shape: (1, 6)
+First 5 rows:
+        date        duration   earliestStartTime       latestEndTime       name agent.id
+0 2025-04-17 0 days 00:30:00 1900-01-01 08:30:00 1900-01-01 10:00:00  Hawabreak     ag36
+------------------------------
+
+--- Sheet: BreakType ---
+Columns: ['duration', 'earliestStartTime', 'latestEndTime', 'name', 'shiftType.id']
+Shape: (54, 5)
+First 5 rows:
+         duration   earliestStartTime       latestEndTime              name     shiftType.id
+0 0 days 00:30:00 1900-01-01 11:00:00 1900-01-01 13:00:00            ag20_1       ag20_shift
+1 0 days 00:15:00 1900-01-01 08:30:00 1900-01-01 09:15:00            ag20_2       ag20_shift
+2 0 days 00:30:00 1900-01-01 18:00:00 1900-01-01 20:00:00   CDD_afternoon_1  CDD_afternoon_1
+3 0 days 00:30:00 1900-01-01 18:00:00 1900-01-01 20:00:00   CDD_afternoon_2  CDD_afternoon_2
+4 0 days 00:30:00 1900-01-01 11:00:00 1900-01-01 13:00:00  CDI_morning_12_1   CDI_morning_13
+------------------------------
+
+--- Sheet: Certification ---
+Columns: ['id', 'name']
+Shape: (17, 2)
+First 5 rows:
+            id                                       name
+0       public  Assignation au travail en zones publiques
+1     lineaire  Assignation au travail en zones lineaires
+2         BS11             Assignation au travail en BS10
+3         BS10             Assignation au travail en BS11
+4  reserved F1  Assignation au travail en zones réservées
+------------------------------
+
+--- Sheet: CertificationKpi ---
+Columns: ['availableCompatibleAgentTime', 'compatibleAgentEarliestShiftStart', 'nbCompatibleAgents', 'nbWorkOrders', 'workOrderTime', 'certification.id']
+Shape: (0, 6)
+First 5 rows:
+Empty DataFrame
+Columns: [availableCompatibleAgentTime, compatibleAgentEarliestShiftStart, nbCompatibleAgents, nbWorkOrders, workOrderTime, certification.id]
+Index: []
+------------------------------
+
+--- Sheet: CertificationRequirement ---
+Columns: ['certification.id', 'taskProgram.id']
+Shape: (0, 2)
+First 5 rows:
+Empty DataFrame
+Columns: [certification.id, taskProgram.id]
+Index: []
+------------------------------
+
+--- Sheet: CrowdInformation ---
+Columns: ['bucketStart', 'nbPax', 'zone.id', 'zoneGroup.id']
+Shape: (11952, 4)
+First 5 rows:
+          bucketStart  nbPax zone.id zoneGroup.id
+0 1900-01-01 00:00:00      0     NaN    BS BUS F1
+1 1900-01-01 00:10:00      0     NaN    BS BUS F1
+2 1900-01-01 00:20:00      0     NaN    BS BUS F1
+3 1900-01-01 00:30:00      0     NaN    BS BUS F1
+4 1900-01-01 00:40:00      0     NaN    BS BUS F1
+------------------------------
+
+--- Sheet: DemandCategory ---
+Columns: ['id']
+Shape: (6, 1)
+First 5 rows:
+           id
+0      ALERTE
+1     RENFORT
+2   ENTRETIEN
+3  PERIODIQUE
+4         SPM
+------------------------------
+
+--- Sheet: Direction ---
+Columns: ['id']
+Shape: (2, 1)
+First 5 rows:
+        id
+0  ARRIVEE
+1   DEPART
+------------------------------
+
+--- Sheet: ExecutionKpi ---
+Columns: ['completedAssignmentRatio']
+Shape: (1, 1)
+First 5 rows:
+   completedAssignmentRatio
+0                  0.991111
+------------------------------
+
+--- Sheet: Gate ---
+Columns: ['description', 'id']
+Shape: (52, 2)
+First 5 rows:
+    description   id
+0  Péninsule F1  F21
+1  Péninsule F1  F23
+2  Péninsule F1  F24
+3  Péninsule F1  F25
+4  Péninsule F1  F26
+------------------------------
+
+--- Sheet: GlobalKpi ---
+Columns: ['plannedWorkDurationRatio', 'plannedWorkOrderRatio']
+Shape: (1, 2)
+First 5 rows:
+   plannedWorkDurationRatio  plannedWorkOrderRatio
+0                  0.570372               0.626755
+------------------------------
+
+--- Sheet: GlobalParameter ---
+Columns: ['date', 'deviationThreshold', 'notificationAcknowledgementDelay', 'overrideLearningCompletionData', 'overrideNonDailyDemandTps', 'qualityControlLateThreshold', 'shiftEndAnticipationThreshold', 'shiftLateThreshold', 'timeGranularity', 'timeZone', 'atalianRoom.id', 'breakRoom.id']
+Shape: (1, 12)
+First 5 rows:
+        date deviationThreshold notificationAcknowledgementDelay  overrideLearningCompletionData  overrideNonDailyDemandTps qualityControlLateThreshold shiftEndAnticipationThreshold shiftLateThreshold timeGranularity      timeZone atalianRoom.id    breakRoom.id
+0 2025-12-03    0 days 00:15:00                  0 days 18:00:00                            True                       True             0 days 00:20:00               0 days 00:15:00    0 days 00:20:00 0 days 00:00:01  Europe/Paris  Local atalian  Salle de pause
+------------------------------
+
+--- Sheet: GlobalTimeBreakdownKpi ---
+Columns: ['activityType', 'timeRatio']
+Shape: (5, 2)
+First 5 rows:
+         activityType  timeRatio
+0                WORK   0.573357
+1               BREAK   0.103750
+2              TRAVEL   0.075436
+3                IDLE   0.224957
+4  SHIFT_ENDING_SETUP   0.022500
+------------------------------
+
+--- Sheet: InterOccurrencePolicy ---
+Columns: ['minimumDelay', 'nbOccurrences']
+Shape: (5, 2)
+First 5 rows:
+     minimumDelay  nbOccurrences
+0 0 days 02:15:00              5
+1 0 days 02:30:00              3
+2 0 days 02:15:00              4
+3 0 days 04:00:00              2
+4 0 days 01:30:00              6
+------------------------------
+
+--- Sheet: Issue ---
+Columns: ['message', 'timestamp', 'agent.id', 'zone.id']
+Shape: (0, 4)
+First 5 rows:
+Empty DataFrame
+Columns: [message, timestamp, agent.id, zone.id]
+Index: []
+------------------------------
+
+--- Sheet: IssueOnProduct ---
+Columns: ['issue.timestamp', 'issue.agent.id', 'productReference.product.id', 'productReference.zone.id']
+Shape: (0, 4)
+First 5 rows:
+Empty DataFrame
+Columns: [issue.timestamp, issue.agent.id, productReference.product.id, productReference.zone.id]
+Index: []
+------------------------------
+
+--- Sheet: LearningCompletion ---
+Columns: ['completionDate', 'agent.id', 'lastLearningItemCompleted.id']
+Shape: (0, 3)
+First 5 rows:
+Empty DataFrame
+Columns: [completionDate, agent.id, lastLearningItemCompleted.id]
+Index: []
+------------------------------
+
+--- Sheet: LearningItem ---
+Columns: ['description', 'id', 'moodleUrl', 'rank']
+Shape: (0, 4)
+First 5 rows:
+Empty DataFrame
+Columns: [description, id, moodleUrl, rank]
+Index: []
+------------------------------
+
+--- Sheet: LearningItemExecutionData ---
+Columns: ['timestamp', 'type', 'plannedLearningItem.agent.id']
+Shape: (0, 3)
+First 5 rows:
+Empty DataFrame
+Columns: [timestamp, type, plannedLearningItem.agent.id]
+Index: []
+------------------------------
+
+--- Sheet: Manager ---
+Columns: ['emailAddress', 'firstName', 'id', 'lastName']
+Shape: (11, 4)
+First 5 rows:
+  emailAddress firstName    id   lastName
+0        PEDRO    PEDRO   mng7  NZEMBANI 
+1       ANATOU    ANATOU  mng4        SOW
+2       SANDRA    SANDRA  mng3   DE JESUS
+3        CISSE     CISSE  mng5   YATABARE
+4        ZAHIA     ZAHIA  mng2   BERRICHI
+------------------------------
+
+--- Sheet: ManagerNotification ---
+Columns: ['acknowledgedBy', 'acknowledgedTimestamp', 'acknowledgementDetails', 'instanceId', 'isAcknowledged', 'timestamp', 'type', 'agent.id', 'manager.id']
+Shape: (131, 9)
+First 5 rows:
+                         acknowledgedBy   acknowledgedTimestamp  acknowledgementDetails                            instanceId  isAcknowledged               timestamp         type agent.id manager.id
+0  01f0bb0f-a922-19e8-bf3a-dd680ce319c5 2025-12-03 06:25:54.086                     NaN  01f0d010-fa6c-1626-9884-a9428a52adee            True 2025-12-03 04:55:16.802  SHIFT_START     ag99       mng6
+1  01f0bb0f-a922-19e8-bf3a-dd680ce319c5 2025-12-03 06:25:57.792                     NaN  01f0d00f-1784-13f8-8aa6-3cad9564fec0            True 2025-12-03 04:56:48.051  SHIFT_START     ag15       mng6
+2  01f0bb0f-a922-19e8-bf3a-dd680ce319c5 2025-12-03 06:26:00.810                     NaN  01f0d013-61a1-1a5c-b8d9-24f5fb576ac0            True 2025-12-03 04:57:51.253  SHIFT_START      ag9       mng6
+3  01f0bb0f-a922-19e8-bf3a-dd680ce319c5 2025-12-03 06:26:04.590                     NaN  01f0d016-70e6-156d-8e83-a2fabd0f88fc            True 2025-12-03 05:03:20.293  SHIFT_START     ag35       mng6
+4  01f0bb0f-a922-19e8-bf3a-dd680ce319c5 2025-12-03 06:26:07.671                     NaN  01f0d00b-5b8b-1fd8-ace6-5190abaefced            True 2025-12-03 05:06:12.684  SHIFT_START     ag37       mng6
+------------------------------
+
+--- Sheet: MissedWorkOrder ---
+Columns: ['assignmentExecutionData.type', 'assignmentExecutionData.plannedAssignment.id', 'workOrder.occurrenceIndex', 'workOrder.taskProgram.id', 'workOrder.zone.id']
+Shape: (41, 5)
+First 5 rows:
+  assignmentExecutionData.type                                                                          assignmentExecutionData.plannedAssignment.id  workOrder.occurrenceIndex                             workOrder.taskProgram.id                                                                                workOrder.zone.id
+0                          END  HYBRID_ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a_ag96_10:37:20                          1                      STANDARD_PERIODIQUE_Poteau inox  ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a
+1                          END  HYBRID_ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a_ag96_10:37:20                          1           ECONOMIQUE_SPM_Extincteur et RIA /dévidoir  ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a
+2                          END  HYBRID_ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a_ag96_10:37:20                          1  STANDARD_PERIODIQUE_Barre de protection inox au sol  ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a
+3                          END  HYBRID_ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a_ag96_10:37:20                          1       ECONOMIQUE_SPM_Barre de protection inox au sol  ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a
+4                          END  HYBRID_ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a_ag96_10:37:20                          1                  STANDARD_PERIODIQUE_Rebord de vitre  ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a
+------------------------------
+
+--- Sheet: NonConformityEvent ---
+Columns: ['id', 'message', 'resource', 'timestamp', 'woGenerated', 'woGenerationDetails', 'manager.id', 'productReference.product.id', 'productReference.zone.id']
+Shape: (0, 9)
+First 5 rows:
+Empty DataFrame
+Columns: [id, message, resource, timestamp, woGenerated, woGenerationDetails, manager.id, productReference.product.id, productReference.zone.id]
+Index: []
+------------------------------
+
+--- Sheet: NonConformityStatusUpdate ---
+Columns: ['discarded', 'message', 'sent', 'timestamp', 'type', 'nonConformityEvent.id']
+Shape: (0, 6)
+First 5 rows:
+Empty DataFrame
+Columns: [discarded, message, sent, timestamp, type, nonConformityEvent.id]
+Index: []
+------------------------------
+
+--- Sheet: NonDailyDemand ---
+Columns: ['lastCompletionDate', 'lastPlannedDate', 'periodicityInDays', 'priority', 'taskProgram.id', 'zone.id']
+Shape: (145, 6)
+First 5 rows:
+  lastCompletionDate lastPlannedDate  periodicityInDays  priority                                       taskProgram.id                                                                                          zone.id
+0         2025-12-02      2025-12-02                  7       NaN  STANDARD_PERIODIQUE_Barre de protection inox au sol   ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 4a à la porte 10a
+1         2025-12-02      2025-12-02                  7       NaN  STANDARD_PERIODIQUE_Barre de protection inox au sol  ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 10a à la porte 14a
+2         2025-11-22      2025-11-22                  7       NaN  STANDARD_PERIODIQUE_Barre de protection inox au sol  ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 14a à la porte 17a
+3         2025-12-02      2025-12-02                  2       NaN     STANDARD_PERIODIQUE_Boitier vert ouverture porte     ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / De la porte 1d à la porte 4d
+4         2025-12-02      2025-12-02                  2       NaN     STANDARD_PERIODIQUE_Boitier vert ouverture porte         ADP / CDG / 2F / Départ / Départ F2 / Zone Publique Départ F2 / De la porte 14d à la PAF
+------------------------------
+
+--- Sheet: PaxFlow ---
+Columns: ['delay', 'paxRatio', 'gate.id', 'reinforcementZone.id', 'reinforcementZoneGroup.id']
+Shape: (889, 5)
+First 5 rows:
+            delay  paxRatio gate.id                                                                            reinforcementZone.id reinforcementZoneGroup.id
+0 0 days 01:10:00       0.7     F02  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 4a à la porte 10a                       NaN
+1 0 days 01:10:00       0.7     F04  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 4a à la porte 10a                       NaN
+2 0 days 01:10:00       0.7     F08  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 4a à la porte 10a                       NaN
+3 0 days 01:10:00       0.7     F10  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 4a à la porte 10a                       NaN
+4 0 days 01:10:00       0.7     F14  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 4a à la porte 10a                       NaN
+------------------------------
+
+--- Sheet: PlannableZonedTaskProgramKpi ---
+Columns: ['shiftStart', 'agent.id', 'taskProgram.id', 'zone.id']
+Shape: (0, 4)
+First 5 rows:
+Empty DataFrame
+Columns: [shiftStart, agent.id, taskProgram.id, zone.id]
+Index: []
+------------------------------
+
+--- Sheet: PlannedAssignment ---
+Columns: ['assignmentType', 'endTime', 'frozen', 'id', 'isTimeConstrained', 'maintenancePassIdx', 'notStartable', 'startTime', 'agent.id', 'zone.id']
+Shape: (225, 10)
+First 5 rows:
+  assignmentType             endTime  frozen                                                                                                                                                id  isTimeConstrained  maintenancePassIdx  notStartable           startTime agent.id                                                                                                                         zone.id
+0         HYBRID 1900-01-01 18:42:13   False                                                 HYBRID_ADP / CDG / 2F / Arrivée / SLB F1 / Zone Réservée SLB F1 / Couloir BS SLB F1_ag52_18:38:01              False                 3.0         False 1900-01-01 18:38:01     ag52                                                    ADP / CDG / 2F / Arrivée / SLB F1 / Zone Réservée SLB F1 / Couloir BS SLB F1
+1         HYBRID 1900-01-01 06:46:18   False  HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2_ag15_06:13              False                 1.0         False 1900-01-01 06:13:00     ag15  ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2
+2         HYBRID 1900-01-01 07:14:42   False                             HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56_ag99_06:42              False                 1.0         False 1900-01-01 06:42:00     ag99                             ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56
+3         HYBRID 1900-01-01 06:42:42   False                             HYBRID_ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1_ag66_06:35              False                 1.0         False 1900-01-01 06:35:00     ag66                             ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1
+4         HYBRID 1900-01-01 08:09:43   False          HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2_ag39_06:42              False                 1.0         False 1900-01-01 06:42:00     ag39          ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2
+------------------------------
+
+--- Sheet: PlannedAssignmentExecutionKpi ---
+Columns: ['actualDuration', 'executionStatus', 'executionStatusText', 'plannedDuration', 'plannedAssignment.id']
+Shape: (225, 5)
+First 5 rows:
+          actualDuration  executionStatus  executionStatusText plannedDuration                                                                                                                              plannedAssignment.id
+0 0 days 00:00:04.508000                1  Completely Executed 0 days 00:04:12                                                 HYBRID_ADP / CDG / 2F / Arrivée / SLB F1 / Zone Réservée SLB F1 / Couloir BS SLB F1_ag52_18:38:01
+1 0 days 00:38:43.231000                1  Completely Executed 0 days 00:33:18  HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2_ag15_06:13
+2 0 days 01:45:44.829000                1  Completely Executed 0 days 00:32:42                             HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56_ag99_06:42
+3 0 days 00:26:59.937000                1  Completely Executed 0 days 00:07:42                             HYBRID_ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1_ag66_06:35
+4 0 days 01:38:35.695000                1  Completely Executed 0 days 01:27:43          HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2_ag39_06:42
+------------------------------
+
+--- Sheet: PlannedBreak ---
+Columns: ['endTime', 'frozen', 'name', 'notStartable', 'startTime', 'agent.id']
+Shape: (51, 6)
+First 5 rows:
+                  endTime  frozen               name  notStartable               startTime agent.id
+0 1900-01-01 11:41:22.000   False      CDI_morning_1         False 1900-01-01 11:11:22.000     ag15
+1 1900-01-01 09:16:23.579   False    CDI_morning_1_2         False 1900-01-01 09:01:23.579     ag15
+2 1900-01-01 19:48:22.000   False    CDI_afternoon_5         False 1900-01-01 19:18:22.000     ag22
+3 1900-01-01 19:16:23.744   False  CDI_afternoon_5_1         False 1900-01-01 19:01:23.744     ag22
+4 1900-01-01 19:30:00.000   False    CDI_afternoon_1         False 1900-01-01 19:00:00.000     ag23
+------------------------------
+
+--- Sheet: PlannedBreakExecutionKpi ---
+Columns: ['actualDuration', 'executionStatus', 'executionStatusText', 'plannedDuration', 'plannedBreak.name', 'plannedBreak.agent.id']
+Shape: (51, 6)
+First 5 rows:
+          actualDuration  executionStatus executionStatusText plannedDuration  plannedBreak.name plannedBreak.agent.id
+0 0 days 00:31:08.619000                1           Completed 0 days 00:30:00      CDI_morning_1                  ag15
+1 0 days 00:09:52.265000                1           Completed 0 days 00:15:00    CDI_morning_1_2                  ag15
+2 0 days 00:00:02.127000                1           Completed 0 days 00:30:00    CDI_afternoon_5                  ag22
+3 0 days 00:00:05.926000                1           Completed 0 days 00:15:00  CDI_afternoon_5_1                  ag22
+4 0 days 00:00:11.067000                1           Completed 0 days 00:30:00    CDI_afternoon_1                  ag23
+------------------------------
+
+--- Sheet: PlannedLearningItem ---
+Columns: ['agent.id', 'learningItem.id']
+Shape: (0, 2)
+First 5 rows:
+Empty DataFrame
+Columns: [agent.id, learningItem.id]
+Index: []
+------------------------------
+
+--- Sheet: PlannedOrder ---
+Columns: ['endTime', 'startTime', 'assignment.id', 'workOrder.occurrenceIndex', 'workOrder.taskProgram.id', 'workOrder.zone.id']
+Shape: (1607, 6)
+First 5 rows:
+                  endTime               startTime                                                                                                                                 assignment.id  workOrder.occurrenceIndex                           workOrder.taskProgram.id                                                                                                        workOrder.zone.id
+0 1900-01-01 08:50:46.385 1900-01-01 08:45:46.385                       HYBRID_ADP / CDG / 2F / Départ / Départ F2 / Zone Publique Départ F2 / BS départ F2 / BS Hommes départ F2_ag95_08:10:23                          1  STANDARD_ENTRETIEN_BS Handicapés Hommes Départ F2                       ADP / CDG / 2F / Départ / Départ F2 / Zone Publique Départ F2 / BS départ F2 / BS Hommes départ F2
+1 1900-01-01 18:25:15.076 1900-01-01 18:23:45.076  HYBRID_ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / Couloir BS Péninsule F1_ag24_18:46:35                          5                  STANDARD_ENTRETIEN_Fontaine à eau  ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / Couloir BS Péninsule F1
+2 1900-01-01 18:30:51.924 1900-01-01 18:30:09.924                                             HYBRID_ADP / CDG / 2F / Arrivée / SLB F1 / Zone Réservée SLB F1 / Couloir BS SLB F1_ag52_18:38:01                          3           STANDARD_ENTRETIEN_Poubelle extérieur bs                                             ADP / CDG / 2F / Arrivée / SLB F1 / Zone Réservée SLB F1 / Couloir BS SLB F1
+3 1900-01-01 17:39:04.626 1900-01-01 17:38:04.626                        HYBRID_ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Hommes IFU_ag118_17:21:13                          2                     STANDARD_ENTRETIEN_Mur urinoir                         ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Hommes IFU
+4 1900-01-01 09:41:00.901 1900-01-01 09:36:48.901               HYBRID_ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 51 à 56_ag15_09:34:26                          1              STANDARD_ENTRETIEN_Poubelle extérieur               ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 51 à 56
+------------------------------
+
+--- Sheet: PlannedQualityControl ---
+Columns: ['date', 'endTime', 'iAuditorLink', 'id', 'startTime', 'manager.id', 'zone.id', 'zoneGroup.id']
+Shape: (8, 8)
+First 5 rows:
+        date             endTime                 iAuditorLink    id           startTime manager.id                                                                                              zone.id  zoneGroup.id
+0 2025-11-20 1900-01-01 16:00:00  https://sfty.io/f3wBhZzpoYb  CRL6 1900-01-01 15:00:00       mng8                               ADP / CDG / 2F / Arrivée / Zone Réservée SLB F2 / Tapis 25 à BS SLB F2           NaN
+1 2025-11-20 1900-01-01 17:00:00  https://sfty.io/boHAUWDpoYb  CRL7 1900-01-01 16:00:00       mng4  ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 31 à 36           NaN
+2 2025-11-18 1900-01-01 17:00:00  https://sfty.io/0sMxUizpoYb  CRL5 1900-01-01 16:00:00       mng8  ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 44 à 50           NaN
+3 2025-11-18 1900-01-01 17:00:00  https://sfty.io/f3wBhZzpoYb  CRL4 1900-01-01 16:00:00       mng4                               ADP / CDG / 2F / Arrivée / Zone Réservée SLB F2 / Tapis 25 à BS SLB F2           NaN
+4 2025-11-18 1900-01-01 16:00:00  https://sfty.io/MymUokppoYb  CRL3 1900-01-01 15:00:00       mng3  ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56           NaN
+------------------------------
+
+--- Sheet: PlannedTravel ---
+Columns: ['endTime', 'startTime', 'agent.id']
+Shape: (301, 3)
+First 5 rows:
+                  endTime               startTime agent.id
+0 1900-01-01 14:09:00.000 1900-01-01 14:00:00.000     ag24
+1 1900-01-01 14:56:53.000 1900-01-01 14:55:53.000     ag24
+2 1900-01-01 15:07:26.041 1900-01-01 15:06:26.041     ag24
+3 1900-01-01 16:02:50.041 1900-01-01 16:01:50.041     ag24
+4 1900-01-01 16:35:19.000 1900-01-01 16:34:19.000     ag24
+------------------------------
+
+--- Sheet: PlanningParameter ---
+Columns: ['capacityReductionFactor', 'interruptionThreshold', 'maxNbAgentsOnZoneGroup', 'minRatioWorkingOverAvailableAgents', 'setupTime', 'urgencyResponseTimeThreshold']
+Shape: (1, 6)
+First 5 rows:
+   capacityReductionFactor interruptionThreshold  maxNbAgentsOnZoneGroup  minRatioWorkingOverAvailableAgents       setupTime urgencyResponseTimeThreshold
+0                        0       0 days 00:10:00                     NaN                                 0.5 0 days 00:10:00              0 days 00:15:00
+------------------------------
+
+--- Sheet: Product ---
+Columns: ['id', 'name', 'sensitive', 'uom.id']
+Shape: (223, 4)
+First 5 rows:
+        id                                 name  sensitive uom.id
+0  prod001                                 Abri      False  UNITE
+1  prod002  Allée rembarde taxi + pot de fleurs      False  UNITE
+2  prod003                                 Banc       True  UNITE
+3  prod004                    Bande podotactile       True  UNITE
+4  prod005                           Banquette        True  UNITE
+------------------------------
+
+--- Sheet: ProductReference ---
+Columns: ['qty', 'product.id', 'zone.id']
+Shape: (1490, 3)
+First 5 rows:
+   qty product.id                                                                                              zone.id
+0   12    prod039  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1
+1    3    prod043  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1
+2    3    prod073  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1
+3   34    prod075  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1
+4    1    prod081  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1
+------------------------------
+
+--- Sheet: Profile ---
+Columns: ['id', 'name']
+Shape: (4, 2)
+First 5 rows:
+                id                         name
+0        prof_stnd             Standard Profile
+1  permanence_gare      Permanence journée gare
+2    permanence_bs        Permanence journée bs
+3         collecte  Collecte des sacs poubelles
+------------------------------
+
+--- Sheet: ProfileCapability ---
+Columns: ['profile.id', 'skill.id', 'skillLevel.id']
+Shape: (11, 3)
+First 5 rows:
+        profile.id skill.id skillLevel.id
+0  permanence_gare      net        NORMAL
+1    permanence_bs      net        NORMAL
+2         collecte      net        NORMAL
+3  permanence_gare       re        NORMAL
+4    permanence_bs       re        NORMAL
+------------------------------
+
+--- Sheet: QualityControlExecutionData ---
+Columns: ['message', 'timestamp', 'type', 'plannedQualityControl.id']
+Shape: (0, 4)
+First 5 rows:
+Empty DataFrame
+Columns: [message, timestamp, type, plannedQualityControl.id]
+Index: []
+------------------------------
+
+--- Sheet: ReinforcementParameter ---
+Columns: ['crowdModelBucketDuration', 'defaultCeilingInPax', 'defaultTriggerInPax', 'horizonToGenerateReinforcements', 'predictiveFlexibility', 'reactiveFlexibility', 'reactiveHorizon']
+Shape: (1, 7)
+First 5 rows:
+  crowdModelBucketDuration  defaultCeilingInPax  defaultTriggerInPax horizonToGenerateReinforcements predictiveFlexibility reactiveFlexibility reactiveHorizon
+0          0 days 00:10:00                 4000                10000                          1 days       0 days 01:00:00     0 days 00:05:00 0 days 02:00:00
+------------------------------
+
+--- Sheet: ReschedulingWarmStartIssue ---
+Columns: ['jobId', 'timestamp']
+Shape: (0, 2)
+First 5 rows:
+Empty DataFrame
+Columns: [jobId, timestamp]
+Index: []
+------------------------------
+
+--- Sheet: ScheduledFlight ---
+Columns: ['companyKey', 'flightUid', 'lineNumber', 'passengerCount', 'revisedDateTime', 'scheduledDateTime', 'status', 'type', 'direction.id', 'gate.id']
+Shape: (273, 10)
+First 5 rows:
+  companyKey     flightUid  lineNumber  passengerCount revisedDateTime   scheduledDateTime   status                                    type direction.id gate.id
+0         AF  299290235147        1242             110             NaT 2025-12-03 21:50:00  REGULAR  J - Normal Service Scheduled Passenger       DEPART     F51
+1         AF  300388499007        7440             199             NaT 2025-12-03 21:35:00  REGULAR  J - Normal Service Scheduled Passenger       DEPART     F30
+2         AF  299593901937        7524             143             NaT 2025-12-03 21:35:00  REGULAR  J - Normal Service Scheduled Passenger       DEPART     F26
+3         AF  300373344037        1230              67             NaT 2025-12-03 21:30:00  REGULAR  J - Normal Service Scheduled Passenger       DEPART     F47
+4         AF  300222263217        1028             119             NaT 2025-12-03 21:25:00  REGULAR  J - Normal Service Scheduled Passenger       DEPART     F29
+------------------------------
+
+--- Sheet: ShiftExecutionData ---
+Columns: ['expectedTime', 'message', 'timestamp', 'type', 'agent.id']
+Shape: (47, 5)
+First 5 rows:
+         expectedTime message               timestamp   type agent.id
+0 1900-01-01 14:00:00     NaN 2025-12-03 12:33:28.714    END     ag15
+1 1900-01-01 06:00:00     NaN 2025-12-03 04:56:46.195  START     ag15
+2 1900-01-01 14:00:00     NaN 2025-12-03 12:52:05.695  START     ag22
+3 1900-01-01 14:00:00     NaN 2025-12-03 13:01:17.791  START     ag23
+4 1900-01-01 14:00:00     NaN 2025-12-03 12:49:32.829  START     ag24
+------------------------------
+
+--- Sheet: ShiftType ---
+Columns: ['endTime', 'id', 'startTime']
+Shape: (30, 3)
+First 5 rows:
+              endTime               id           startTime
+0 1900-01-01 15:00:00       ag20_shift 1900-01-01 07:00:00
+1 1900-01-01 21:30:00  CDD_afternoon_1 1900-01-01 14:30:00
+2 1900-01-01 21:00:00  CDD_afternoon_2 1900-01-01 14:00:00
+3 1900-01-01 14:00:00    CDD_morning_1 1900-01-01 06:30:00
+4 1900-01-01 22:00:00  CDI_afternoon_1 1900-01-01 14:00:00
+------------------------------
+
+--- Sheet: Skill ---
+Columns: ['id', 'name']
+Shape: (20, 2)
+First 5 rows:
+     id         name
+0   net    nettoyage
+1  algr  alerte gare
+2    re      renfort
+3    si        siège
+4  inox         inox
+------------------------------
+
+--- Sheet: SkillKpi ---
+Columns: ['availableCompatibleAgentTime', 'compatibleAgentEarliestShiftStart', 'nbCompatibleAgents', 'nbWorkOrders', 'workOrderTime', 'skill.id', 'skillLevel.id']
+Shape: (0, 7)
+First 5 rows:
+Empty DataFrame
+Columns: [availableCompatibleAgentTime, compatibleAgentEarliestShiftStart, nbCompatibleAgents, nbWorkOrders, workOrderTime, skill.id, skillLevel.id]
+Index: []
+------------------------------
+
+--- Sheet: SkillLevel ---
+Columns: ['id']
+Shape: (3, 1)
+First 5 rows:
+         id
+0    NORMAL
+1  DEBUTANT
+2    EXPERT
+------------------------------
+
+--- Sheet: SkillRequirement ---
+Columns: ['level.id', 'skill.id', 'taskProgram.id']
+Shape: (1324, 3)
+First 5 rows:
+  level.id skill.id                               taskProgram.id
+0   NORMAL       al     STANDARD_ALERTE_SIGNALEMENT SALE_prod009
+1   NORMAL      net                  ECONOMIQUE_SPM_Sol moquette
+2   NORMAL       re                      STANDARD_RENFORT_Sol bs
+3   NORMAL     inox  ECONOMIQUE_SPM__Rampe entrée pré-passerelle
+4   NORMAL      net  ECONOMIQUE_SPM__Rampe entrée pré-passerelle
+------------------------------
+
+--- Sheet: TaskProgram ---
+Columns: ['conformityRestoration', 'defaultNbOccurrences', 'earliestStartTime', 'id', 'latestEndTime', 'name', 'unitDuration', 'demandCategory.id', 'product.id']
+Shape: (1269, 9)
+First 5 rows:
+   conformityRestoration  defaultNbOccurrences earliestStartTime                                                  id latestEndTime            name    unitDuration demandCategory.id product.id
+0                   True                     1               NaT  STANDARD_ALERTE_SIGNALEMENT NON CONFORMITE_prod285           NaT  NON CONFORMITE 0 days 00:05:00            ALERTE    prod285
+1                   True                     1               NaT  STANDARD_ALERTE_SIGNALEMENT NON CONFORMITE_prod284           NaT  NON CONFORMITE 0 days 00:05:00            ALERTE    prod284
+2                   True                     1               NaT  STANDARD_ALERTE_SIGNALEMENT NON CONFORMITE_prod283           NaT  NON CONFORMITE 0 days 00:05:00            ALERTE    prod283
+3                   True                     1               NaT  STANDARD_ALERTE_SIGNALEMENT NON CONFORMITE_prod245           NaT  NON CONFORMITE 0 days 00:05:00            ALERTE    prod245
+4                   True                     1               NaT  STANDARD_ALERTE_SIGNALEMENT NON CONFORMITE_prod244           NaT  NON CONFORMITE 0 days 00:05:00            ALERTE    prod244
+------------------------------
+
+--- Sheet: TravelTime ---
+Columns: ['duration', 'from.id', 'to.id']
+Shape: (7804, 3)
+First 5 rows:
+         duration                                                                                              from.id                                                                                                                                 to.id
+0 0 days 00:00:01  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1                                   ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Hommes Canyon F1
+1 0 days 00:00:01  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1                                         ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 1a à la porte 4a
+2 0 days 00:00:35  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1  ADP / CDG / 2F / Arrivée / Linéaire Arrivée F1 / Zone Publique Linéaire Canyon F1 / De la porte 1a à la porte 5a Linéaire Arrivée F1
+3 0 days 00:00:45  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1                                        ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 4a à la porte 10a
+4 0 days 00:01:00  ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / BS Canyon F1 / BS Femmes Canyon F1  ADP / CDG / 2F / Arrivée / Linéaire Arrivée F1 / Zone Publique Linéaire Canyon F1 / De la porte 5a à la porte 9a Linéaire Arrivée F1
+------------------------------
+
+--- Sheet: UnitOfMeasure ---
+Columns: ['id']
+Shape: (2, 1)
+First 5 rows:
+      id
+0  UNITE
+1     M2
+------------------------------
+
+--- Sheet: WorkOrder ---
+Columns: ['creationTimestamp', 'duration', 'earliestStartTime', 'idealDelayBeforeNextOccurrence', 'latestEndTime', 'maintenancePassIdx', 'occurrenceIndex', 'predictive', 'priority', 'sensitive', 'alertOnProduct.alert.timestamp', 'alertOnProduct.alert.manager.id', 'alertOnProduct.taskProgram.id', 'nonConformityEvent.id', 'taskProgram.id', 'zone.id']
+Shape: (2564, 16)
+First 5 rows:
+   creationTimestamp        duration earliestStartTime idealDelayBeforeNextOccurrence latestEndTime  maintenancePassIdx  occurrenceIndex  predictive  priority  sensitive  alertOnProduct.alert.timestamp  alertOnProduct.alert.manager.id  alertOnProduct.taskProgram.id  nonConformityEvent.id                                            taskProgram.id                                                                                                                         zone.id
+0                NaN 0 days 00:06:15               NaT                0 days 04:00:00           NaT                 1.0                1       False         4       True                             NaN                              NaN                            NaN                    NaN                   STANDARD_ENTRETIEN_BS Handicapés BUS F1                                 ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Hommes BUS F1
+1                NaN 0 days 00:07:40               NaT                0 days 04:00:00           NaT                 1.0                1       False         4       True                             NaN                              NaN                            NaN                    NaN  STANDARD_ENTRETIEN_BS Handicapés Femmes Nez Péninsule F2  ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Femmes Nez Péninsule F2
+2                NaN 0 days 00:07:00               NaT                0 days 04:00:00           NaT                 1.0                1       False         4       True                             NaN                              NaN                            NaN                    NaN  STANDARD_ENTRETIEN_BS Handicapés Hommes Nez Péninsule F2  ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2
+3                NaN 0 days 00:10:00               NaT                0 days 08:00:00           NaT                 1.0                1       False         4       True                             NaN                              NaN                            NaN                    NaN                        STANDARD_ENTRETIEN_BS Nurserie IFU                                ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Femmes IFU
+4                NaN 0 days 00:07:00               NaT                0 days 08:00:00           NaT                 1.0                1       False         4       True                             NaN                              NaN                            NaN                    NaN               STANDARD_ENTRETIEN_BS Handicapés Femmes IFU                                ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Femmes IFU
+------------------------------
+
+--- Sheet: WorkOrderCompletion ---
+Columns: ['assignmentExecutionData.type', 'assignmentExecutionData.plannedAssignment.id', 'workOrder.occurrenceIndex', 'workOrder.taskProgram.id', 'workOrder.zone.id']
+Shape: (1598, 5)
+First 5 rows:
+  assignmentExecutionData.type                                                                                                          assignmentExecutionData.plannedAssignment.id  workOrder.occurrenceIndex                   workOrder.taskProgram.id                                                                                                                workOrder.zone.id
+0                          END                                 HYBRID_ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1_ag66_06:35                          1        STANDARD_ENTRETIEN_Cabine ascenseur                              ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1
+1                          END                                 HYBRID_ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1_ag66_06:35                          1  STANDARD_ENTRETIEN_Poubelle (gare départ)                              ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1
+2                          END                                 HYBRID_ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1_ag66_06:35                          1                STANDARD_ENTRETIEN_Sol gare                              ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1
+3                          END  HYBRID_ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / Couloir BS Nez Péninsule F2_ag15_06:47:18                          1                  STANDARD_ENTRETIEN_Sol bs  ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / Couloir BS Nez Péninsule F2
+4                          END                              HYBRID_ADP / CDG / 2F / Départ / Départ F2 / Zone Publique Départ F2 / BS départ F2 / Couloir BS départ F2_ag95_07:41:45                          1        STANDARD_ENTRETIEN_Cabine ascenseur                              ADP / CDG / 2F / Départ / Départ F2 / Zone Publique Départ F2 / BS départ F2 / Couloir BS départ F2
+------------------------------
+
+--- Sheet: Zone ---
+Columns: ['critical', 'id', 'interiorTravelTimeFactor', 'isPublic', 'name', 'nominalClosingTime', 'nominalOpeningTime', 'direction.id', 'zoneGroup.id']
+Shape: (121, 9)
+First 5 rows:
+   critical                                                                                                   id  interiorTravelTimeFactor  isPublic                  name  nominalClosingTime  nominalOpeningTime direction.id  zoneGroup.id
+0      True   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Femmes départ F1                         0      True   BS Femmes départ F1 1900-01-01 21:00:00 1900-01-01 06:00:00       DEPART  BS départ F1
+1      True   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Hommes départ F1                         0      True   BS Hommes départ F1 1900-01-01 21:00:00 1900-01-01 06:00:00       DEPART  BS départ F1
+2      True  ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1                         0      True  Couloir BS départ F1 1900-01-01 21:00:00 1900-01-01 06:00:00       DEPART  BS départ F1
+3      True       ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS file 14 / BS Femmes file 14                         0      True     BS Femmes file 14 1900-01-01 21:00:00 1900-01-01 06:00:00       DEPART    BS file 14
+4      True       ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS file 14 / BS Hommes file 14                         0      True     BS Hommes file 14 1900-01-01 21:00:00 1900-01-01 06:00:00       DEPART    BS file 14
+------------------------------
+
+--- Sheet: ZoneCertificationRequirement ---
+Columns: ['certification.id', 'zone.id']
+Shape: (114, 2)
+First 5 rows:
+  certification.id                                                                                              zone.id
+0               F1   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Femmes départ F1
+1               F1   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Hommes départ F1
+2               F1  ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1
+3               F2       ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS file 14 / BS Femmes file 14
+4               F2       ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS file 14 / BS Hommes file 14
+------------------------------
+
+--- Sheet: ZoneDemandCategoryKpi ---
+Columns: ['nbWorkOrdersPlanned', 'nbWorkOrdersTotal', 'nbWorkOrdersUnplanned', 'plannedWorkDurationRatio', 'plannedWorkOrderRatio', 'unplannedWorkDurationRatio', 'unplannedWorkOrderRatio', 'workPlannedDuration', 'workTotalDuration', 'workUnplannedDuration', 'demandCategory.id', 'zone.id']
+Shape: (124, 12)
+First 5 rows:
+   nbWorkOrdersPlanned  nbWorkOrdersTotal  nbWorkOrdersUnplanned  plannedWorkDurationRatio  plannedWorkOrderRatio  unplannedWorkDurationRatio  unplannedWorkOrderRatio workPlannedDuration workTotalDuration workUnplannedDuration demandCategory.id                                                                                              zone.id
+0                    6                  6                      0                  1.000000               1.000000                    0.000000                 0.000000     0 days 00:18:58   0 days 00:18:58       0 days 00:00:00           RENFORT   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Femmes départ F1
+1                   31                 45                     14                  0.757230               0.688889                    0.242770                 0.311111     0 days 02:21:24   0 days 03:06:44       0 days 00:45:20         ENTRETIEN   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Femmes départ F1
+2                   42                 45                      3                  0.970728               0.933333                    0.029272                 0.066667     0 days 02:30:20   0 days 02:34:52       0 days 00:04:32         ENTRETIEN   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Hommes départ F1
+3                    8                  8                      0                  1.000000               1.000000                    0.000000                 0.000000     0 days 00:24:34   0 days 00:24:34       0 days 00:00:00           RENFORT   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Hommes départ F1
+4                   17                 22                      5                  0.849662               0.772727                    0.150338                 0.227273     0 days 00:33:32   0 days 00:39:28       0 days 00:05:56         ENTRETIEN  ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1
+------------------------------
+
+--- Sheet: ZoneGroup ---
+Columns: ['id', 'name', 'direction.id']
+Shape: (26, 3)
+First 5 rows:
+             id          name direction.id
+0  BS départ F2  BS départ F2       DEPART
+1    BS file 14    BS file 14       DEPART
+2  BS départ F1  BS départ F1       DEPART
+3     BS SLB F1     BS SLB F1      ARRIVEE
+4     BS SLB F2     BS SLB F2      ARRIVEE
+------------------------------
+
+--- Sheet: ZoneGroupOccurrenceKpi ---
+Columns: ['maintenancePassIdx', 'plannedNbZones', 'plannedRatio', 'totalNbZones', 'zoneGroup.id']
+Shape: (56, 5)
+First 5 rows:
+   maintenancePassIdx  plannedNbZones  plannedRatio  totalNbZones         zoneGroup.id
+0                   2               2           1.0             2  BS Péninsule F1 - 2
+1                   1               2           1.0             2           BS file 14
+2                   1               2           1.0             2         BS Canyon F1
+3                   4               1           1.0             1  BS Péninsule F2 - 2
+4                   3               1           1.0             1  BS Péninsule F1 - 1
+------------------------------
+
+--- Sheet: ZoneGroupReinforcementOverride ---
+Columns: ['ceilingInPax', 'triggerInPax', 'zoneGroup.id']
+Shape: (6, 3)
+First 5 rows:
+   ceilingInPax  triggerInPax         zoneGroup.id
+0          4000         15000  BS Nez Péninsule F2
+1          4000         15000            BS BUS F1
+2          4000          7500  BS Péninsule F2 - 2
+3          4000          7500  BS Péninsule F2 - 1
+4          4000         13000  BS Péninsule F1 - 1
+------------------------------
+
+--- Sheet: ZoneKpi ---
+Columns: ['maxVisits', 'minVisits', 'nbVisits', 'visitBoundsExplanation', 'zone.id']
+Shape: (121, 5)
+First 5 rows:
+   maxVisits  minVisits  nbVisits                                                                   visitBoundsExplanation                                                                                              zone.id
+0          4          4         4  Specific WOs: 0, Alert WOs: 0, Reinforcement Occurrences: 1, Maintenance Occurrences: 4   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Femmes départ F1
+1          4          4         5  Specific WOs: 0, Alert WOs: 0, Reinforcement Occurrences: 1, Maintenance Occurrences: 4   ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / BS Hommes départ F1
+2          4          4         5  Specific WOs: 0, Alert WOs: 0, Reinforcement Occurrences: 1, Maintenance Occurrences: 4  ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS départ F1 / Couloir BS départ F1
+3          4          4         3  Specific WOs: 0, Alert WOs: 0, Reinforcement Occurrences: 0, Maintenance Occurrences: 4       ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS file 14 / BS Femmes file 14
+4          4          4         4  Specific WOs: 0, Alert WOs: 0, Reinforcement Occurrences: 0, Maintenance Occurrences: 4       ADP / CDG / 2F / Départ / Départ F1 / Zone Publique Départ F1 / BS file 14 / BS Hommes file 14
+------------------------------
+
+--- Sheet: ZoneShutdown ---
+Columns: ['endTime', 'startTime', 'zone.id']
+Shape: (21, 3)
+First 5 rows:
+              endTime           startTime                                                                                                                         zone.id
+0 1900-01-01 22:00:00 1900-01-01 06:00:00                                 ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Femmes BUS F2
+1 1900-01-01 22:00:00 1900-01-01 06:00:00                             ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Handicapés BUS F2
+2 1900-01-01 22:00:00 1900-01-01 06:00:00                                 ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Hommes BUS F2
+3 1900-01-01 22:00:00 1900-01-01 06:00:00                                ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  Couloir BS BUS F2
+4 1900-01-01 22:00:00 1900-01-01 06:00:00  ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Femmes Nez Péninsule F1
+------------------------------
+
+--- Sheet: ZonedReinforcementOverride ---
+Columns: ['ceilingInPax', 'triggerInPax', 'zone.id']
+Shape: (0, 3)
+First 5 rows:
+Empty DataFrame
+Columns: [ceilingInPax, triggerInPax, zone.id]
+Index: []
+------------------------------
+
+--- Sheet: ZonedTaskProgramOverride ---
+Columns: ['nbOccurrences', 'taskProgram.id', 'zone.id']
+Shape: (886, 3)
+First 5 rows:
+   nbOccurrences                            taskProgram.id                                                                                                                            zone.id
+0              4  STANDARD_ENTRETIEN_Poubelle extérieur bs                                 ADP / CDG / 2F / Départ / Départ F2 / Zone Publique Départ F2 / BS départ F2 / BS Femmes départ F2
+1              6  STANDARD_ENTRETIEN_Poubelle extérieur bs           ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Nurserie Péninsule F1
+2              4  STANDARD_ENTRETIEN_Poubelle extérieur bs                                 ADP / CDG / 2F / Départ / Départ F2 / Zone Publique Départ F2 / BS départ F2 / BS Hommes départ F2
+3              2  STANDARD_ENTRETIEN_Poubelle extérieur bs                                 ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Nurserie IFU
+4              6  STANDARD_ENTRETIEN_Poubelle extérieur bs  ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Hommes Péninsule F2
+------------------------------
+
+--- Sheet: GeneIssue ---
+Columns: ['instanceClass', 'instanceKey', 'message', 'severity', 'tag']
+Shape: (1197, 5)
+First 5 rows:
+  instanceClass                           instanceKey                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              message severity                                tag
+0          Zone  01f0bb08-4098-1135-8e10-f9cff46a3e5b                       Travel time information from zone ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / Canyon F1 to zone(s) ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Femmes BUS F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Handicapés BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Salle d'attente F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Racine Péninsule F2 (Embarquement), ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Racine Péninsule F1 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Nurserie Péninsule F2, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF Central, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Avant Débarquement PAF F1, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 /  Correspondance F2 à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / Couloir BS Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Femmes  Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF 1 au PIF Central, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Nurserie Nez Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Femmes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / Péninsule F2 / Zone Réservée Péninsule F2 / Salle débarquement F2, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  Couloir BS BUS F2, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 / BUS 2G, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Hommes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Femmes  Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Femmes IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 / PASS K, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Handicapés BUS F1, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Renforcement BUS F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  Couloir BS BUS F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Hommes IFU, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Hommes BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Hommes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Hommes IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Femmes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Femmes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Nurserie IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Nurserie Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 /  Correspondance F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Racine Péninsule F1 (Embarquement), ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Renforcement BUS F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Hommes Péninsule F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Embarquement Porte 21 à Porte 23, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / Couloir BS Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / Couloir BS Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Femmes Nez Péninsule F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Embarquement Porte 41 à Porte 43, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / Couloir BS IFU, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Femmes IFU, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Racine Péninsule F2 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Péninsule F1 / Accès BS Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Hommes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Avant Débarquement PAF F2 , ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Femmes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Femmes BUS F1, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Hommes BUS F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / PIF Central à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Femmes Péninsule F1 is missing: direct travel will not be possible  WARNING  Input MissingTravelTimeMatrixArcs
+1          Zone  01f0bb08-4099-1135-8e10-f9cff46a3e5b    Travel time information from zone ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 1a à la porte 4a to zone(s) ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Femmes BUS F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Handicapés BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Salle d'attente F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Racine Péninsule F2 (Embarquement), ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Racine Péninsule F1 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Nurserie Péninsule F2, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF Central, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Avant Débarquement PAF F1, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 /  Correspondance F2 à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / Couloir BS Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Femmes  Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF 1 au PIF Central, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Nurserie Nez Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Femmes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / Péninsule F2 / Zone Réservée Péninsule F2 / Salle débarquement F2, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  Couloir BS BUS F2, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 / BUS 2G, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Hommes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Femmes  Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Femmes IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 / PASS K, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Handicapés BUS F1, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Renforcement BUS F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  Couloir BS BUS F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Hommes IFU, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Hommes BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Hommes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Hommes IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Femmes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Femmes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Nurserie IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Nurserie Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 /  Correspondance F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Racine Péninsule F1 (Embarquement), ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Renforcement BUS F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Hommes Péninsule F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Embarquement Porte 21 à Porte 23, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / Couloir BS Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / Couloir BS Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Femmes Nez Péninsule F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Embarquement Porte 41 à Porte 43, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / Couloir BS IFU, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Femmes IFU, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Racine Péninsule F2 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Péninsule F1 / Accès BS Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Hommes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Avant Débarquement PAF F2 , ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Femmes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Femmes BUS F1, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Hommes BUS F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / PIF Central à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Femmes Péninsule F1 is missing: direct travel will not be possible  WARNING  Input MissingTravelTimeMatrixArcs
+2          Zone  01f0bb08-409a-1135-8e10-f9cff46a3e5b   Travel time information from zone ADP / CDG / 2F / Arrivée / Canyon F1 / Zone Publique Canyon F1 / De la porte 4a à la porte 10a to zone(s) ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Femmes BUS F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Handicapés BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Salle d'attente F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Racine Péninsule F2 (Embarquement), ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Racine Péninsule F1 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Nurserie Péninsule F2, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF Central, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Avant Débarquement PAF F1, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 /  Correspondance F2 à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / Couloir BS Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Femmes  Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF 1 au PIF Central, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Nurserie Nez Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Femmes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / Péninsule F2 / Zone Réservée Péninsule F2 / Salle débarquement F2, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  Couloir BS BUS F2, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 / BUS 2G, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Hommes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Femmes  Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Femmes IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 / PASS K, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Handicapés BUS F1, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Renforcement BUS F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  Couloir BS BUS F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Hommes IFU, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Hommes BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Hommes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Hommes IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Femmes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Femmes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Nurserie IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Nurserie Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 /  Correspondance F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Racine Péninsule F1 (Embarquement), ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Renforcement BUS F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Hommes Péninsule F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Embarquement Porte 21 à Porte 23, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / Couloir BS Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / Couloir BS Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Femmes Nez Péninsule F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Embarquement Porte 41 à Porte 43, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / Couloir BS IFU, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Femmes IFU, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Racine Péninsule F2 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Péninsule F1 / Accès BS Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Hommes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Avant Débarquement PAF F2 , ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Femmes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Femmes BUS F1, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Hommes BUS F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / PIF Central à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Femmes Péninsule F1 is missing: direct travel will not be possible  WARNING  Input MissingTravelTimeMatrixArcs
+3          Zone  01f0bb08-409b-1135-8e10-f9cff46a3e5b                       Travel time information from zone ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / Canyon F2 to zone(s) ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Femmes BUS F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Handicapés BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Salle d'attente F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Racine Péninsule F2 (Embarquement), ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Racine Péninsule F1 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Nurserie Péninsule F2, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF Central, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Avant Débarquement PAF F1, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 /  Correspondance F2 à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / Couloir BS Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Femmes  Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF 1 au PIF Central, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Nurserie Nez Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Femmes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / Péninsule F2 / Zone Réservée Péninsule F2 / Salle débarquement F2, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  Couloir BS BUS F2, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 / BUS 2G, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Hommes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Femmes  Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Femmes IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 / PASS K, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Handicapés BUS F1, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Renforcement BUS F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  Couloir BS BUS F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Hommes IFU, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Hommes BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Hommes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Hommes IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Femmes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Femmes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Nurserie IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Nurserie Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 /  Correspondance F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Racine Péninsule F1 (Embarquement), ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Renforcement BUS F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Hommes Péninsule F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Embarquement Porte 21 à Porte 23, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / Couloir BS Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / Couloir BS Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Femmes Nez Péninsule F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Embarquement Porte 41 à Porte 43, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / Couloir BS IFU, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Femmes IFU, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Racine Péninsule F2 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Péninsule F1 / Accès BS Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Hommes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Avant Débarquement PAF F2 , ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Femmes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Femmes BUS F1, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Hommes BUS F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / PIF Central à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Femmes Péninsule F1 is missing: direct travel will not be possible  WARNING  Input MissingTravelTimeMatrixArcs
+4          Zone  01f0bb08-409c-1135-8e10-f9cff46a3e5b  Travel time information from zone ADP / CDG / 2F / Arrivée / Canyon F2 / Zone Publique Canyon F2 / De la porte 10a à la porte 14a to zone(s) ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Femmes BUS F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Handicapés BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Salle d'attente F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Racine Péninsule F2 (Embarquement), ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Racine Péninsule F1 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Nurserie Péninsule F2, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF Central, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Avant Débarquement PAF F1, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 /  Correspondance F2 à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / Couloir BS Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Pré-Passerelles Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Femmes  Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / PIF 1 au PIF Central, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Nurserie Nez Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Femmes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / Péninsule F2 / Zone Réservée Péninsule F2 / Salle débarquement F2, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Pré-Passerelles Débarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  Couloir BS BUS F2, ADP / CDG / 2F / Arrivée / Correspondance F2 / Zone Réservée Correspondance F2 / BUS 2G, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Hommes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Femmes  Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Femmes IFU, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 44 à 50, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 / PASS K, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Handicapés BUS F1, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Renforcement BUS F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  Couloir BS BUS F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Hommes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 24 à 30, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Hommes IFU, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / BS BUS F2 (BS-24) /  BS Hommes BUS F2, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Hommes Nez Péninsule F2, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Hommes IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Handicapés Femmes Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / Embarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Femmes Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Hommes Péninsule F1, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Nurserie IFU, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Nurserie Péninsule F1, ADP / CDG / 2F / Arrivée / Correspondance F1 / Zone Réservée Correspondance F1 /  Correspondance F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Racine Péninsule F1 (Embarquement), ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Renforcement BUS F1, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Pré-Passerelles Embarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Péninsule F2 (BS-10) / BS Handicapés Hommes Péninsule F2, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / Embarquement Porte 21 à Porte 23, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / Couloir BS Nez Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Hommes Nez Péninsule F2, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / Couloir BS Péninsule F1, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / BS Nez Péninsule F2 (BS-50) / BS Handicapés Femmes Nez Péninsule F2, ADP / CDG / 2F / Départ / BUS F2 / Zone Réservée BUS F2 / Embarquement Porte 41 à Porte 43, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / Couloir BS IFU, ADP / CDG / 2F / Arrivée / IFU / Zone Réservée IFU / Galerie IFU / BS IFU (BS-6) / BS Handicapés Femmes IFU, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Racine Péninsule F2 (Débarquement), ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / Péninsule F1 / Accès BS Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Débarquement F2 Porte 51 à 56, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Hommes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F2 / Zone Réservée Débarquement F2 / Avant Débarquement PAF F2 , ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Nez Péninsule F1 (BS-49) / BS Femmes Nez Péninsule F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Pré-Passerelles Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Femmes BUS F1, ADP / CDG / 2F / Départ / BUS F1 / Zone Réservée BUS F1 / BS BUS F1 (BS-25) /  BS Hommes BUS F1, ADP / CDG / 2F / Arrivée / Débarquement F1 / Zone Réservée Débarquement F1 / Débarquement F1 Porte 31 à 36, ADP / CDG / 2F / Départ / Péninsule F2 / Zone Réservée Péninsule F2 / PIF Central à S3, ADP / CDG / 2F / Départ / Péninsule F1 / Zone Réservée Péninsule F1 / BS Péninsule F1 (BS-11) / BS Handicapés Femmes Péninsule F1 is missing: direct travel will not be possible  WARNING  Input MissingTravelTimeMatrixArcs
+------------------------------
+
+--- Sheet: GeneParameter ---
+Columns: ['explanation', 'name', 'value', 'valueType']
+Shape: (3, 4)
+First 5 rows:
+   explanation                                              name  value  valueType
+0          NaN                       ALLOW_BREAKS_IN_ZONE_GROUPS   true        NaN
+1          NaN                       ENFORCE_ORDERING_CONSTRAINT  false        NaN
+2          NaN  MAX_TIME_WITHOUT_TARDINESS_GAP_IMPROV_IN_SECONDS    600        NaN
+------------------------------
+
+--- Sheet: GeneSchemaIssue ---
+Columns: ['instanceClass', 'instanceKey', 'message', 'severity', 'tag']
+Shape: (0, 5)
+First 5 rows:
+Empty DataFrame
+Columns: [instanceClass, instanceKey, message, severity, tag]
+Index: []
+------------------------------

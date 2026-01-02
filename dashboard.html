@@ -288,7 +288,30 @@
                 const stats = await statsRes.json();
                 const metricsData = await metricsRes.json();
 
-                allMetrics = metricsData.data;
+                // Filtering Logic
+                allMetrics = metricsData.data.filter(m => {
+                    const name = m.zoneName.toLowerCase();
+                    const nbVisits = m.nbVisits || 0;
+                    const maxVisits = m.maxVisits || 0;
+
+                    // 1. Exclude specific unwanted zones
+                    if (name.includes('salle de pause') ||
+                        name.includes('local atalian') ||
+                        name.includes('handicapés') ||
+                        name.includes('handicapes') ||
+                        name.includes('linéaire') ||
+                        name.includes('lineaire')) { // Handle potential accent variations
+                        return false;
+                    }
+
+                    // 2. Exclude inactive zones (0 planned AND 0 real)
+                    if (maxVisits === 0 && nbVisits === 0) {
+                        return false;
+                    }
+
+                    return true;
+                });
+
                 renderStats(stats);
                 applyFiltersAndSort();
 
@@ -808,9 +831,12 @@
                     let aVal, bVal;
                     switch (sortColumn) {
                         case 'zone': aVal = a.zoneName.toLowerCase(); bVal = b.zoneName.toLowerCase(); break;
+                        case 'visites': aVal = a.nbVisits || 0; bVal = b.nbVisits || 0; break;
                         case 'maintenance': aVal = a.occurrencesMaintenance || 0; bVal = b.occurrencesMaintenance || 0; break;
                         case 'additionnelles': aVal = a.occurrencesAdditionnelles || 0; bVal = b.occurrencesAdditionnelles || 0; break;
                         case 'alertes': aVal = a.alertWOs || 0; bVal = b.alertWOs || 0; break;
+                        case 'dureeAlertes': aVal = a.dureeAlertesSeconds || 0; bVal = b.dureeAlertesSeconds || 0; break;
+                        case 'dureeSpecific': aVal = a.dureeSpecificSeconds || 0; bVal = b.dureeSpecificSeconds || 0; break;
                         case 'pax': aVal = a.paxTotal || 0; bVal = b.paxTotal || 0; break;
                         case 'duree':
                             const aT = (a.dureeMaintenanceSeconds || 0) + (a.dureeAdditionnelleSeconds || 0);
@@ -846,24 +872,46 @@
 
         function renderTable(metrics) {
             let tableHtml = `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th onclick="sortBy('zone')">Zone <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                            <th onclick="sortBy('maintenance')">Occurrences <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                            <th onclick="sortBy('additionnelles')">Additionnelles <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                            <th onclick="sortBy('alertes')">Alertes <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                            <th onclick="sortBy('pax')">Passagers <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                            <th onclick="sortBy('duree')" style="text-align: right;">Durée Moy. <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortBy('zone')">Zone <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('visites')" style="border-right: 1px solid var(--border);">Visites (Réel / Prévu) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('maintenance')">Occurrences <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('additionnelles')">Additionnelles <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('alertes')">Alertes (Qté) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('dureeAlertes')">Alertes (Tps) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('dureeSpecific')">Spécifique (Tps) <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('pax')">Passagers <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                        <th onclick="sortBy('duree')" style="text-align: right;">Durée Moy. <i class="ri-expand-up-down-fill" style="opacity:0.3; vertical-align: middle;"></i></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    `;
 
             metrics.forEach((metric, index) => {
                 const totalSeconds = (metric.dureeMaintenanceSeconds || 0) + (metric.dureeAdditionnelleSeconds || 0);
                 const totalOcc = (metric.occurrencesMaintenance || 0);
                 const avgMin = totalOcc > 0 ? Math.round(totalSeconds / totalOcc / 60) : 0;
+
+                // Duration formatters
+                const alertesMin = Math.round((metric.dureeAlertesSeconds || 0) / 60);
+                const specMin = Math.round((metric.dureeSpecificSeconds || 0) / 60);
+
+                // Logic for visits column
+                const nbVisits = metric.nbVisits || 0;
+                const minVisits = metric.minVisits || 0;
+                const maxVisits = metric.maxVisits || 0;
+                let visitBadgeClass = 'badge-neutral';
+
+                // Red if more than planned max, Orange if less than planned min (if min > 0)
+                if (maxVisits > 0 && nbVisits > maxVisits) {
+                    visitBadgeClass = 'badge-danger'; // Trop de visites
+                } else if (minVisits > 0 && nbVisits < minVisits) {
+                    visitBadgeClass = 'badge-warning'; // Pas assez de visites
+                } else if (maxVisits > 0) {
+                    visitBadgeClass = 'badge-success'; // Dans les clous
+                }
 
                 tableHtml += `
                     <tr>
@@ -878,6 +926,11 @@
                                 </div>
                             </div>
                         </td>
+                        <td style="border-right: 1px solid var(--border);">
+                            ${maxVisits > 0
+                        ? `<span class="badge ${visitBadgeClass}">${nbVisits} / ${maxVisits}</span>`
+                        : `<span style="color: var(--text-muted); font-size: 0.9em;">-</span>`}
+                        </td>
                         <td>
                             <span class="badge badge-neutral">${metric.occurrencesMaintenance || 0}</span>
                         </td>
@@ -891,6 +944,12 @@
                         ? `<span class="badge badge-danger">${metric.alertWOs}</span>`
                         : '<span style="color: var(--text-muted);">-</span>'}
                         </td>
+                        <td>
+                             ${alertesMin > 0 ? `<span class="badge badge-neutral">${alertesMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}
+                        </td>
+                        <td>
+                             ${specMin > 0 ? `<span class="badge badge-neutral">${specMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}
+                        </td>
                         <td style="font-weight: 600; font-family: monospace;">
                             ${(metric.paxTotal || 0).toLocaleString('fr-FR')}
                         </td>
@@ -898,7 +957,7 @@
                             <span class="badge badge-success">${avgMin} min</span>
                         </td>
                     </tr>
-                `;
+                    `;
             });
 
             tableHtml += `</tbody></table>`;
