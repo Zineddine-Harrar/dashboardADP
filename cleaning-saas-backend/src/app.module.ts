@@ -4,6 +4,7 @@ import { DatabaseModule } from './database/database.module';
 import { EtlModule } from './etl/etl.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { UploadController } from './api/upload.controller';
+import { ChatbotModule } from './chatbot/chatbot.module';
 
 /**
  * Root application module
@@ -20,6 +21,7 @@ import { UploadController } from './api/upload.controller';
         DatabaseModule,
         EtlModule,
         MetricsModule,
+        ChatbotModule,
     ],
     controllers: [UploadController],
 })

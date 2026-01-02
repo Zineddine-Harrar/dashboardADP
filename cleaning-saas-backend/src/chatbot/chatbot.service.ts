@@ -373,47 +373,44 @@ export class ChatbotService {
 
     private async callOpenAI(prompt: string): Promise<string> {
         try {
-            const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+            const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
 
             if (!OPENAI_API_KEY) {
-                throw new Error('OPENAI_API_KEY not configured in environment variables');
+                throw new Error('OPENAI_API_KEY or OPENROUTER_API_KEY not configured in environment variables');
             }
 
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                    'HTTP-Referer': 'http://localhost:3000',
+                    'X-Title': 'DATALIAN Chatbot',
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini', // 20x moins cher que gpt-4o, toujours excellent
+                    model: 'xiaomi/mimo-v2-flash:free', // XIAOMI MiMo-V2-Flash (256K context, Claude-level performance)
                     messages: [
                         {
-                            role: 'system',
-                            content: 'Tu es un assistant analytique spécialisé dans les données de nettoyage aéroportuaire. Réponds de manière précise et concise en français.'
-                        },
-                        {
                             role: 'user',
-                            content: prompt
+                            content: prompt  // Le prompt contient déjà TOUT (système + données + question)
                         }
                     ],
-                    temperature: 0.2,
-                    max_tokens: 500,
+                    temperature: 0.1,  // Plus bas = plus cohérent et prévisible
+                    max_tokens: 800,   // Plus de tokens pour réponses complètes
+                    top_p: 0.9,
                 }),
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`OpenAI API error: ${response.statusText} - ${JSON.stringify(errorData)}`);
+                const errorText = await response.text();
+                throw new Error(`OpenRouter returned ${response.status}: ${errorText}`);
             }
 
             const data = await response.json();
             return data.choices[0].message.content;
         } catch (error) {
-            console.error('Error calling OpenAI:', error);
-            throw new Error(
-                `Impossible de contacter OpenAI: ${error.message}`,
-            );
+            console.error('[CHATBOT] Error calling OpenRouter:', error);
+            throw new Error(`Impossible de contacter OpenAI: ${error.message}`);
         }
     }
 }

@@ -51,3 +51,28 @@ model DailyZoneCleaningMetrics {
   
   @@map("daily_zone_cleaning_metrics")
 }
+
+/// Chat interaction logs
+model ChatLog {
+  id              Int       @id @default(autoincrement())
+  
+  // Interaction details
+  question        String    @db.Text
+  response        String?   @db.Text
+  responseTimeMs  Int?
+  success         Boolean   @default(true)
+  errorMessage    String?   @db.Text
+  
+  // Context date (if question was about a specific date)
+  dateContext     DateTime? @db.Date
+  
+  // User feedback
+  userFeedback    Int?      // 1 = thumbs up, -1 = thumbs down, 0 or null = none
+  feedbackDate    DateTime?
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  
+  @@map("chat_logs")
+}
+
