@@ -6,6 +6,7 @@ import {
     BadRequestException,
     HttpCode,
     HttpStatus,
+    UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -13,11 +14,16 @@ import { extname, join } from 'path';
 import { EtlOrchestratorService } from '../etl/services/etl-orchestrator.service';
 import * as fs from 'fs';
 import AdmZip = require('adm-zip');
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles, Role } from '../auth/roles.decorator';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('upload')
 export class UploadController {
     constructor(private readonly etlOrchestrator: EtlOrchestratorService) { }
 
+    @Roles(Role.ADMIN)
     @Post('zip')
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(

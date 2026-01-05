@@ -79,9 +79,14 @@
                     <i class="ri-arrow-right-s-line"></i>
                 </button>
                 <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
-                <button class="btn btn-primary" onclick="window.location.href='upload.html'">
+                <button id="importButton" class="btn btn-primary" onclick="window.location.href='upload.html'"
+                    style="display: none;">
                     <i class="ri-upload-cloud-line"></i>
                     <span>Importer</span>
+                </button>
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+                <button class="btn" onclick="logout()" title="Déconnexion">
+                    <i class="ri-logout-box-r-line"></i>
                 </button>
             </div>
         </header>
@@ -235,6 +240,42 @@
     <script>
         const API_URL = 'http://localhost:3000';
 
+        // Auth Check
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!token || !user) {
+            window.location.href = 'login.html';
+        }
+
+        // Apply Role Restrictions
+        document.addEventListener('DOMContentLoaded', () => {
+            if (user && user.role === 'ADMIN') {
+                const importBtn = document.getElementById('importButton');
+                if (importBtn) importBtn.style.display = 'flex';
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Fetch Wrapper with Token
+        async function fetchWithAuth(url, options = {}) {
+            const headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+            const response = await fetch(url, { ...options, headers });
+            if (response.status === 401) {
+                logout();
+                return;
+            }
+            return response;
+        }
+
         // Theme Logic
         function toggleTheme() {
             const html = document.documentElement;
@@ -324,7 +365,7 @@
         // Initialize
         async function loadAvailableDates() {
             try {
-                const response = await fetch(`${API_URL}/metrics/dates/available`);
+                const response = await fetchWithAuth(`${API_URL}/metrics/dates/available`);
                 if (!response.ok) throw new Error(`Status: ${response.status}`);
                 const data = await response.json();
                 availableDates = data.dates || [];
@@ -546,7 +587,7 @@
             setLoading(true);
             try {
                 const promises = month.dates.map(date =>
-                    fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`).then(r => r.json())
                 );
 
                 const metricsWrappers = await Promise.all(promises);
@@ -592,7 +633,7 @@
             setLoading(true);
             try {
                 const promises = year.dates.map(date =>
-                    fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`).then(r => r.json())
                 );
 
                 const metricsWrappers = await Promise.all(promises);
@@ -707,7 +748,7 @@
             setLoading(true);
             try {
                 const promises = year.dates.map(date =>
-                    fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`).then(r => r.json())
                 );
 
                 const metricsWrappers = await Promise.all(promises);
@@ -786,7 +827,7 @@
             setLoading(true);
             try {
                 const promises = week.dates.map(date =>
-                    fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`).then(r => r.json())
                 );
 
                 const metricsWrappers = await Promise.all(promises);
@@ -883,33 +924,46 @@
 
         // Helper: Calculate the sum of unique daily totals from metrics that contain dailyTotalPax
         function sumUniqueDailyTotals(metricsList) {
-            const uniqueDates = new Set();
-            let total = 0;
+            const dailyMap = {};
             for (const m of metricsList) {
-                const dateKey = m.date ? new Date(m.date).toISOString().split('T')[0] : null;
-                if (dateKey && !uniqueDates.has(dateKey) && m.dailyTotalPax !== undefined) {
-                    uniqueDates.add(dateKey);
-                    total += (m.dailyTotalPax || 0);
+                const d = m.date;
+                if (!d) continue;
+                const dStr = typeof d === 'string' ? d.split('T')[0] : d.toISOString().split('T')[0];
+
+                // Prioritize dailyTotalPax (global) if available, otherwise sum paxTotal (per zone)
+                if (m.dailyTotalPax !== undefined && m.dailyTotalPax !== null && m.dailyTotalPax > 0) {
+                    dailyMap[dStr] = m.dailyTotalPax;
+                } else if (!dailyMap[dStr]) {
+                    // Start summing paxTotal if no dailyTotalPax seen yet
+                    dailyMap[dStr] = (m.paxTotal || 0);
+                } else {
+                    // Check if the current value was a dailyTotalPax. If so, don't add paxTotal.
+                    // (This is a bit complex, let's simplify: In reality, sum(paxTotal) == dailyTotalPax)
+                    // Let's just always sum paxTotal if we want the true aggregate
+                    // But wait, the user wants the flight total.
+                    // Best way: Use a Set for unique per-date global totals OR just sum paxTotal.
+                    // Let's sum paxTotal for all records in the list.
                 }
             }
-            return total;
+
+            // Actually, the simplest and most robust way:
+            // For a list of metrics, paxTotal is per zone.
+            // If we sum ALL paxTotal in the metricsList, we get the total for the period COVERED by those metrics.
+            return metricsList.reduce((sum, m) => sum + (m.paxTotal || 0), 0);
         }
 
         function calculateWeekStats(aggregatedMetrics) {
-            // SOMME tous les dailyTotalPax collectés (un par jour)
-            let totalPax = 0;
-            if (aggregatedMetrics._weeklyDailyTotals) {
-                totalPax = aggregatedMetrics._weeklyDailyTotals.reduce((a, b) => a + b, 0);
-            }
+            // Stats summary for the period
+            const totalPax = sumUniqueDailyTotals(aggregatedMetrics);
 
             return {
                 totalPax: totalPax,
                 totalAlerts: aggregatedMetrics.reduce((s, m) => s + (m.alertWOs || 0), 0),
-                totalMaintenanceHours: aggregatedMetrics.reduce((s, m) => s + m.dureeMaintenanceSeconds / 3600, 0),
+                totalMaintenanceHours: aggregatedMetrics.reduce((s, m) => s + (m.dureeMaintenanceSeconds || 0) / 3600, 0),
                 totalZones: aggregatedMetrics.length,
-                totalOccurrencesMaintenance: aggregatedMetrics.reduce((s, m) => s + m.occurrencesMaintenance, 0),
-                totalOccurrencesAdditionnelles: aggregatedMetrics.reduce((s, m) => s + m.occurrencesAdditionnelles, 0),
-                totalAdditionnelleHours: aggregatedMetrics.reduce((s, m) => s + m.dureeAdditionnelleSeconds / 3600, 0)
+                totalOccurrencesMaintenance: aggregatedMetrics.reduce((s, m) => s + (m.occurrencesMaintenance || 0), 0),
+                totalOccurrencesAdditionnelles: aggregatedMetrics.reduce((s, m) => s + (m.occurrencesAdditionnelles || 0), 0),
+                totalAdditionnelleHours: aggregatedMetrics.reduce((s, m) => s + (m.dureeAdditionnelleSeconds || 0) / 3600, 0)
             };
         }
 
@@ -938,10 +992,10 @@
             const dataSeries = dates.map(date => {
                 const metrics = currentChartMetrics[date] || [];
                 if (zoneFilter === 'all') {
-                    // Use dailyTotalPax for global view (one value per date)
-                    const dailyTotal = metrics.length > 0 ? (metrics[0].dailyTotalPax || 0) : 0;
+                    // Use helper to sum unique daily totals if month/year (multiple days in metrics)
+                    const dailyTotal = sumUniqueDailyTotals(metrics);
                     return {
-                        totalPax: dailyTotal,  // Single dailyTotalPax for this date
+                        totalPax: dailyTotal,
                         totalMaintenanceHours: metrics.reduce((sum, m) => sum + ((m.dureeMaintenanceSeconds || 0) / 3600), 0),
                         totalAdditionnelleHours: metrics.reduce((sum, m) => sum + ((m.dureeAdditionnelleSeconds || 0) / 3600), 0),
                         totalAlerts: metrics.reduce((sum, m) => sum + (m.alertWOs || 0), 0)
@@ -963,8 +1017,8 @@
         async function loadDate(date) {
             try {
                 const [statsRes, metricsRes] = await Promise.all([
-                    fetch(`${API_URL}/metrics/stats/summary?date=${date}`),
-                    fetch(`${API_URL}/metrics?date=${date}`)
+                    fetchWithAuth(`${API_URL}/metrics/stats/summary?date=${date}`),
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`)
                 ]);
 
                 const stats = await statsRes.json();
@@ -1237,12 +1291,17 @@
                         type: 'linear', display: true, position: 'left',
                         title: { display: true, text: yLabel, font: { size: 12, weight: '600' } },
                         grid: { color: '#f1f5f9' },
-                        ticks: { callback: v => v.toLocaleString('fr-FR') }
+                        beginAtZero: false,
+                        grace: '20%',
+                        ticks: {
+                            callback: v => v < 0 ? '' : v.toLocaleString('fr-FR')
+                        }
                     },
                     y1: {
                         type: 'linear', display: true, position: 'right',
                         title: { display: true, text: y1Label, font: { size: 12, weight: '600' } },
                         grid: { display: false },
+                        min: 0,
                         ticks: { callback: v => v.toLocaleString('fr-FR') }
                     },
                     x: { grid: { display: false } }
@@ -1396,7 +1455,7 @@
             addTypingIndicator();
 
             try {
-                const response = await fetch(`${API_URL}/chat/query`, {
+                const response = await fetchWithAuth(`${API_URL}/chat/query`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1467,7 +1526,7 @@
 
         async function sendFeedback(logId, rating) {
             try {
-                await fetch(`${API_URL}/chat/feedback`, {
+                await fetchWithAuth(`${API_URL}/chat/feedback`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

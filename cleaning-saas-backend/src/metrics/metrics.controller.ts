@@ -1,10 +1,12 @@
-import { Controller, Get, Query, Param, ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Query, Param, ValidationPipe, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
 import { QueryMetricsDto, QueryZoneMetricsDto } from './dto/query-metrics.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 /**
  * Controller for metrics API endpoints
  */
+@UseGuards(JwtAuthGuard)
 @Controller('metrics')
 export class MetricsController {
     constructor(private metricsService: MetricsService) { }

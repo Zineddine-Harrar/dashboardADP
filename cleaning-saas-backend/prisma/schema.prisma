@@ -78,3 +78,19 @@ model ChatLog {
   @@map("chat_logs")
   @@index([createdAt])
 }
+
+enum Role {
+  ADMIN
+  STANDARD
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      Role     @default(STANDARD)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}

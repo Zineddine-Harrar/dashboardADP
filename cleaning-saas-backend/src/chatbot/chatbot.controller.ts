@@ -1,7 +1,8 @@
-﻿import { Body, Controller, Post, Get, Param, HttpException, HttpStatus, Query } from '@nestjs/common';
+﻿import { Body, Controller, Post, Get, Param, HttpException, HttpStatus, Query, UseGuards } from '@nestjs/common';
 import { ChatbotService } from './chatbot.service';
 import { ChatLogService } from './chat-log.service';
 import { IsString, IsOptional, IsInt } from 'class-validator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 export class ChatQueryDto {
     @IsString()
@@ -20,6 +21,7 @@ export class FeedbackDto {
     rating: number; // 1 or -1
 }
 
+@UseGuards(JwtAuthGuard)
 @Controller('chat')
 export class ChatbotController {
     constructor(
