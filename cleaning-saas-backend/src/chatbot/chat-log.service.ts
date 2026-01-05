@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 
 export interface ChatLogData {
@@ -61,7 +61,7 @@ export class ChatLogService {
             },
         });
 
-        console.log(`[CHAT FEEDBACK] ID:${logId} | Rating:${feedback === 1 ? '👍' : '👎'}`);
+        console.log(`[CHAT FEEDBACK] ID:${logId} | Rating:${feedback === 1 ? '­ƒæì' : '­ƒæÄ'}`);
     }
 
     /**

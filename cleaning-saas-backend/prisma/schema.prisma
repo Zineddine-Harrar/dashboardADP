@@ -25,7 +25,8 @@ model DailyZoneCleaningMetrics {
   alertWOs                   Int?     @default(0)
   
   // PAX (passenger) metrics
-  paxTotal                   Int?     @default(0)
+  paxTotal                   Int?     @default(0)  // Per-zone PAX from CrowdInformation
+  dailyTotalPax              Int?     @default(0)  // Daily total PAX from ScheduledFlight (departures + arrivals)
   
   // Duration metrics in seconds
   dureeMaintenanceSeconds    Int?     @default(0)
@@ -50,4 +51,30 @@ model DailyZoneCleaningMetrics {
   @@index([zoneId])
   
   @@map("daily_zone_cleaning_metrics")
+}
+
+/// Chat interaction logs for the AI chatbot
+model ChatLog {
+  id              Int       @id @default(autoincrement())
+  
+  // Interaction details
+  question        String    @db.Text
+  response        String?   @db.Text
+  responseTimeMs  Int?
+  success         Boolean   @default(true)
+  errorMessage    String?   @db.Text
+  
+  // Context date (if question was about a specific date)
+  dateContext     DateTime? @db.Date
+  
+  // User feedback
+  userFeedback    Int?      // 1 = thumbs up, -1 = thumbs down, null = none
+  feedbackDate    DateTime?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("chat_logs")
+  @@index([createdAt])
 }

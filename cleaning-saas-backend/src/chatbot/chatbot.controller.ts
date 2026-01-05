@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Param, HttpException, HttpStatus, Query } from '@nestjs/common';
+﻿import { Body, Controller, Post, Get, Param, HttpException, HttpStatus, Query } from '@nestjs/common';
 import { ChatbotService } from './chatbot.service';
 import { ChatLogService } from './chat-log.service';
 import { IsString, IsOptional, IsInt } from 'class-validator';
@@ -37,7 +37,7 @@ export class ChatbotController {
             return {
                 success: true,
                 response,
-                logId, // ← ID pour le feedback
+                logId, // ÔåÉ ID pour le feedback
                 timestamp: new Date().toISOString(),
             };
         } catch (error) {
@@ -90,7 +90,7 @@ export class ChatbotController {
             throw new HttpException(
                 {
                     success: false,
-                    error: 'Impossible de récupérer les analytics',
+                    error: 'Impossible de r├®cup├®rer les analytics',
                 },
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
@@ -111,7 +111,7 @@ export class ChatbotController {
             throw new HttpException(
                 {
                     success: false,
-                    error: 'Impossible de récupérer les logs',
+                    error: 'Impossible de r├®cup├®rer les logs',
                 },
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );

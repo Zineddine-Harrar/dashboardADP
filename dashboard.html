@@ -25,7 +25,7 @@
         <header class="header">
             <div class="brand">
                 <img src="img/atalian-LOGO.png" alt="Atalian Global Services">
-                <h1>Cleaning Analytics</h1>
+                <h1>DATALIAN KPI</h1>
             </div>
             <div class="controls">
                 <!-- Theme Toggle -->
@@ -47,6 +47,10 @@
                         <input type="radio" name="viewMode" value="month" onchange="switchViewMode()">
                         Mois
                     </label>
+                    <label>
+                        <input type="radio" name="viewMode" value="year" onchange="switchViewMode()">
+                        Année
+                    </label>
                 </div>
 
                 <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
@@ -65,6 +69,10 @@
 
                 <div id="monthControlContainer" style="display:none;">
                     <select id="monthSelector" onchange="loadSelectedMonth()"></select>
+                </div>
+
+                <div id="yearControlContainer" style="display:none;">
+                    <select id="yearSelector" onchange="loadSelectedYear()"></select>
                 </div>
 
                 <button class="btn" onclick="navigate(1)">
@@ -190,6 +198,35 @@
             </div>
         </div>
 
+        <!-- Chatbot Widget -->
+        <div id="chatbotTest" class="chatbot-test-widget">
+            <div class="chatbot-test-header" onclick="toggleChatbotTest()">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <img src="atalian-cat.png" alt="Chat Atalian"
+                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                    <h3>Le Chat de DATALIAN</h3>
+                </div>
+                <button class="btn btn-icon">
+                    <i id="chatbotTestIcon" class="ri-arrow-down-s-line"></i>
+                </button>
+            </div>
+            <div id="chatbotTestBody" class="chatbot-test-body">
+                <div id="chatbotMessages" class="chatbot-messages">
+                    <div class="chatbot-message assistant">
+                        Bonjour ! Je suis votre assistant d'analyse de données. Posez-moi des questions sur vos
+                        métriques de nettoyage !
+                    </div>
+                </div>
+                <div class="chatbot-input-group">
+                    <input type="text" id="chatbotInput" placeholder="Ex: Quelle zone a le plus d'alertes ?"
+                        onkeypress="if(event.key==='Enter') sendChatMessage()" />
+                    <button onclick="sendChatMessage()" class="btn btn-primary">
+                        <i class="ri-send-plane-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <footer class="footer">
             <p>&copy; 2025 Atalian Global Services &bull; Dashboard Analytics</p>
         </footer>
@@ -258,6 +295,10 @@
         let months = [];
         let currentMonthIndex = 0;
 
+        // Year View Vars
+        let years = [];
+        let currentYearIndex = 0;
+
         let currentChartMetrics = {}; // Map: date -> metrics[] for charts scope
         let currentChartDates = [];
 
@@ -312,6 +353,9 @@
                 // Init Months (populates month selector)
                 initMonths();
 
+                // Init Years (populates year selector)
+                initYears();
+
                 // Select Day Mode by Default (checked in HTML)
                 // We call switchViewMode but we DON'T let it trigger loading during init
                 // We will handle the initial load explicitly below.
@@ -364,7 +408,7 @@
 
             const sel = document.getElementById('weekSelector');
             sel.innerHTML = weeks.map((w, i) => `<option value="${i}">${w.label}</option>`).join('');
-            currentWeekIndex = 0; // Default to first (newest)
+            currentWeekIndex = 0;
         }
 
         function initMonths() {
@@ -393,20 +437,68 @@
             currentMonthIndex = 0;
         }
 
+        function initYears() {
+            const yearMap = new Map();
+            availableDates.forEach(dateStr => {
+                const d = new Date(dateStr);
+                const year = d.getFullYear();
+                if (!yearMap.has(year)) yearMap.set(year, []);
+                yearMap.get(year).push(dateStr);
+            });
+
+            years = Array.from(yearMap.entries())
+                .sort((a, b) => b[0] - a[0]) // DESC: newest year first
+                .map(([year, dates]) => {
+                    // Group dates by month within the year
+                    const monthsInYear = new Map();
+                    dates.forEach(dateStr => {
+                        const d = new Date(dateStr);
+                        const monthKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                        if (!monthsInYear.has(monthKey)) monthsInYear.set(monthKey, []);
+                        monthsInYear.get(monthKey).push(dateStr);
+                    });
+
+                    const monthsArray = Array.from(monthsInYear.entries())
+                        .sort((a, b) => a[0].localeCompare(b[0]))
+                        .map(([key, dates]) => {
+                            const [y, m] = key.split('-');
+                            const dateObj = new Date(y, m - 1);
+                            const label = dateObj.toLocaleDateString('fr-FR', { month: 'short' });
+                            return { label: label.charAt(0).toUpperCase() + label.slice(1), dates };
+                        });
+
+                    return {
+                        label: year.toString(),
+                        year: year,
+                        dates: dates.sort(),
+                        months: monthsArray
+                    };
+                });
+
+            const sel = document.getElementById('yearSelector');
+            sel.innerHTML = years.map((y, i) => `<option value="${i}">${y.label}</option>`).join('');
+            currentYearIndex = 0;
+        }
+
         function switchViewMode() {
             const mode = document.querySelector('input[name="viewMode"]:checked').value;
             const isWeek = mode === 'week';
             const isMonth = mode === 'month';
+            const isYear = mode === 'year';
 
             // Toggle Controls
             document.getElementById('dateControlContainer').style.display = (mode === 'day') ? 'inline-block' : 'none';
             document.getElementById('weekControlContainer').style.display = isWeek ? 'inline-block' : 'none';
             document.getElementById('monthControlContainer').style.display = isMonth ? 'inline-block' : 'none';
+            document.getElementById('yearControlContainer').style.display = isYear ? 'inline-block' : 'none';
 
             // Toggle Logic
             const chartsGrid = document.querySelector('.charts-grid');
 
-            if (isMonth) {
+            if (isYear) {
+                chartsGrid.style.display = 'grid';
+                loadSelectedYear();
+            } else if (isMonth) {
                 chartsGrid.style.display = 'grid';
                 loadSelectedMonth();
             } else if (isWeek) {
@@ -466,8 +558,7 @@
                     throw new Error("Aucune donnée disponible pour ce mois.");
                 }
 
-                allMetrics = aggregateWeekData(dailyMetricsArrays); // Logic same as week
-
+                allMetrics = aggregateWeekData(dailyMetricsArrays);
                 allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
                 populateZoneFilters();
 
@@ -481,9 +572,7 @@
                     }
                 });
                 renderChartsForWeek(month.dates, monthMetricsMap);
-
                 applyFiltersAndSort();
-
             } catch (e) {
                 console.error("Error loading month", e);
                 document.getElementById('statsGrid').innerHTML =
@@ -493,13 +582,193 @@
             }
         }
 
+        // YEAR VIEW
+        async function loadSelectedYear() {
+            const index = parseInt(document.getElementById('yearSelector').value);
+            currentYearIndex = index;
+            const year = years[index];
+            if (!year) return;
+
+            setLoading(true);
+            try {
+                const promises = year.dates.map(date =>
+                    fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                );
+
+                const metricsWrappers = await Promise.all(promises);
+                const dailyMetricsArrays = metricsWrappers
+                    .filter(w => w && w.data && Array.isArray(w.data))
+                    .map(w => w.data);
+
+                if (dailyMetricsArrays.length === 0) {
+                    throw new Error("Aucune donnée disponible pour cette année.");
+                }
+
+                allMetrics = aggregateWeekData(dailyMetricsArrays);
+                allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
+                populateZoneFilters();
+
+                const yearStats = calculateWeekStats(allMetrics);
+                renderStats(yearStats);
+
+                const monthlyMetricsMap = {};
+                year.months.forEach(monthData => {
+                    const monthDates = monthData.dates;
+                    const monthMetrics = [];
+
+                    monthDates.forEach(date => {
+                        const idx = year.dates.indexOf(date);
+                        if (idx !== -1 && metricsWrappers[idx] && metricsWrappers[idx].data) {
+                            monthMetrics.push(...metricsWrappers[idx].data);
+                        }
+                    });
+
+                    if (monthMetrics.length > 0) {
+                        monthlyMetricsMap[monthData.label] = monthMetrics;
+                    }
+                });
+
+                const monthLabels = year.months.map(m => m.label);
+                renderChartsForYear(monthLabels, monthlyMetricsMap);
+                applyFiltersAndSort();
+            } catch (e) {
+                console.error("Error loading year", e);
+                document.getElementById('statsGrid').innerHTML =
+                    `<div class="error-state"><i class="ri-error-warning-line"></i> ${e.message || "Erreur lors du chargement de l'année"}</div>`;
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function renderChartsForYear(monthLabels, monthlyMetricsMap) {
+            currentChartDates = monthLabels;
+            currentChartMetrics = monthlyMetricsMap;
+
+            for (let i = 1; i <= 4; i++) {
+                updateChart(i);
+            }
+        }
+
+        // NEW PICKER FUNCTIONS
+        function loadDateFromPicker() {
+            const picker = document.getElementById('datePicker');
+            const selectedDate = picker.value;
+            if (selectedDate) {
+                setLoading(true);
+                loadDate(selectedDate).finally(() => setLoading(false));
+            }
+        }
+
+        function loadWeekFromPicker() {
+            const picker = document.getElementById('weekPicker');
+            const weekValue = picker.value; // Format: YYYY-Www
+            if (!weekValue) return;
+
+            const [year, weekNum] = weekValue.split('-W');
+            const weekNumber = parseInt(weekNum);
+
+            // Find matching week
+            const matchingWeek = weeks.find(w => {
+                const weekDate = new Date(w.mondayKey);
+                const weekYear = weekDate.getFullYear();
+                const weekOfYear = getWeekNumber(weekDate);
+                return weekYear === parseInt(year) && weekOfYear === weekNumber;
+            });
+
+            if (matchingWeek) {
+                currentWeekIndex = weeks.indexOf(matchingWeek);
+                loadSelectedWeek();
+            }
+        }
+
+        function loadMonthFromPicker() {
+            const picker = document.getElementById('monthPicker');
+            const monthValue = picker.value; // Format: YYYY-MM
+            if (!monthValue) return;
+
+            const matchingMonth = months.find(m => m.monthKey === monthValue);
+            if (matchingMonth) {
+                currentMonthIndex = months.indexOf(matchingMonth);
+                loadSelectedMonth();
+            }
+        }
+
+        async function loadYearFromPicker() {
+            const picker = document.getElementById('yearPicker');
+            const yearValue = parseInt(picker.value);
+            if (!yearValue) return;
+
+            const matchingYear = years.find(y => y.year === yearValue);
+            if (!matchingYear) return;
+
+            currentYearIndex = years.indexOf(matchingYear);
+            const year = matchingYear;
+
+            setLoading(true);
+            try {
+                const promises = year.dates.map(date =>
+                    fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                );
+
+                const metricsWrappers = await Promise.all(promises);
+                const dailyMetricsArrays = metricsWrappers
+                    .filter(w => w && w.data && Array.isArray(w.data))
+                    .map(w => w.data);
+
+                if (dailyMetricsArrays.length === 0) {
+                    throw new Error("Aucune donnée disponible pour cette année.");
+                }
+
+                allMetrics = aggregateWeekData(dailyMetricsArrays);
+                allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
+                populateZoneFilters();
+
+                const yearStats = calculateWeekStats(allMetrics);
+                renderStats(yearStats);
+
+                const monthlyMetricsMap = {};
+                year.months.forEach(monthData => {
+                    const monthDates = monthData.dates;
+                    const monthMetrics = [];
+
+                    monthDates.forEach(date => {
+                        const idx = year.dates.indexOf(date);
+                        if (idx !== -1 && metricsWrappers[idx] && metricsWrappers[idx].data) {
+                            monthMetrics.push(...metricsWrappers[idx].data);
+                        }
+                    });
+
+                    if (monthMetrics.length > 0) {
+                        monthlyMetricsMap[monthData.label] = monthMetrics;
+                    }
+                });
+
+                const monthLabels = year.months.map(m => m.label);
+                renderChartsForYear(monthLabels, monthlyMetricsMap);
+                applyFiltersAndSort();
+            } catch (e) {
+                console.error("Error loading year", e);
+                document.getElementById('statsGrid').innerHTML =
+                    `<div class="error-state"><i class="ri-error-warning-line"></i> ${e.message || "Erreur lors du chargement de l'année"}</div>`;
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
         async function loadSelectedDate() {
             const index = parseInt(document.getElementById('dateSelector').value);
             currentDateIndex = index;
             const date = availableDates[index];
             if (!date) return;
 
-            // Show loading
             setLoading(true);
             try {
                 await loadDate(date);
@@ -514,19 +783,13 @@
             const week = weeks[index];
             if (!week) return;
 
-            // Show loading
             setLoading(true);
-
-            // Fetch Data for all days
             try {
                 const promises = week.dates.map(date =>
                     fetch(`${API_URL}/metrics?date=${date}`).then(r => r.json())
                 );
 
-                // metricsRes array
                 const metricsWrappers = await Promise.all(promises);
-
-                // Filter out failed wrappers and extract data
                 const dailyMetricsArrays = metricsWrappers
                     .filter(w => w && w.data && Array.isArray(w.data))
                     .map(w => w.data);
@@ -535,29 +798,21 @@
                     throw new Error("Aucune donnée disponible pour cette semaine.");
                 }
 
-                // Process Aggregation
                 allMetrics = aggregateWeekData(dailyMetricsArrays);
-
-                // Render Table with Aggregated Metrics
                 allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
                 populateZoneFilters();
 
-                // Render Stats Header (Week Summary)
                 const weekStats = calculateWeekStats(allMetrics);
                 renderStats(weekStats);
 
-                // Render Charts
                 const weekMetricsMap = {};
-                // Map only the dates we actually got data for
                 week.dates.forEach((d, i) => {
                     if (metricsWrappers[i] && metricsWrappers[i].data) {
                         weekMetricsMap[d] = metricsWrappers[i].data;
                     }
                 });
                 renderChartsForWeek(week.dates, weekMetricsMap);
-
-                applyFiltersAndSort(); // Refresh table
-
+                applyFiltersAndSort();
             } catch (e) {
                 console.error("Error loading week", e);
                 document.getElementById('statsGrid').innerHTML =
@@ -568,6 +823,14 @@
         }
 
         function aggregateWeekData(dailyArrays) {
+            // FIRST: Collect unique daily totals (one per day) BEFORE zone aggregation
+            const dailyTotals = [];
+            for (const dayMetrics of dailyArrays) {
+                if (dayMetrics && dayMetrics.length > 0 && dayMetrics[0].dailyTotalPax !== undefined) {
+                    dailyTotals.push(dayMetrics[0].dailyTotalPax);
+                }
+            }
+
             // Flatten first to get all occurrences
             const flat = dailyArrays.flat();
             const zoneMap = {};
@@ -606,22 +869,43 @@
                 Z.alertWOs += (m.alertWOs || 0);
             });
 
-            return Object.values(zoneMap).map(Z => {
+            const aggregatedZones = Object.values(zoneMap).map(Z => {
                 // Durations are SUMMED.
                 // Avg Duration (calculated column) will be handled by renderTable using these Sums / Occurrences.
-
                 return Z;
             });
+
+            // Attach the collected daily totals so calculateWeekStats can access them
+            aggregatedZones._weeklyDailyTotals = dailyTotals;
+
+            return aggregatedZones;
+        }
+
+        // Helper: Calculate the sum of unique daily totals from metrics that contain dailyTotalPax
+        function sumUniqueDailyTotals(metricsList) {
+            const uniqueDates = new Set();
+            let total = 0;
+            for (const m of metricsList) {
+                const dateKey = m.date ? new Date(m.date).toISOString().split('T')[0] : null;
+                if (dateKey && !uniqueDates.has(dateKey) && m.dailyTotalPax !== undefined) {
+                    uniqueDates.add(dateKey);
+                    total += (m.dailyTotalPax || 0);
+                }
+            }
+            return total;
         }
 
         function calculateWeekStats(aggregatedMetrics) {
-            // Recalculate global stats from aggregated metrics
+            // SOMME tous les dailyTotalPax collectés (un par jour)
+            let totalPax = 0;
+            if (aggregatedMetrics._weeklyDailyTotals) {
+                totalPax = aggregatedMetrics._weeklyDailyTotals.reduce((a, b) => a + b, 0);
+            }
+
             return {
-                totalPax: aggregatedMetrics.reduce((s, m) => s + m.paxTotal, 0),
-                totalAlerts: aggregatedMetrics.reduce((s, m) => s + m.alertWOs, 0),
-                // maintenance etc.
+                totalPax: totalPax,
+                totalAlerts: aggregatedMetrics.reduce((s, m) => s + (m.alertWOs || 0), 0),
                 totalMaintenanceHours: aggregatedMetrics.reduce((s, m) => s + m.dureeMaintenanceSeconds / 3600, 0),
-                // ... populate all
                 totalZones: aggregatedMetrics.length,
                 totalOccurrencesMaintenance: aggregatedMetrics.reduce((s, m) => s + m.occurrencesMaintenance, 0),
                 totalOccurrencesAdditionnelles: aggregatedMetrics.reduce((s, m) => s + m.occurrencesAdditionnelles, 0),
@@ -643,14 +927,21 @@
         // MODIFIED getChartData to use Scope
         function getChartData(zoneFilter) {
             const dates = currentChartDates; // already sorted
+            // Check if we're in year mode (labels are month names, not ISO dates)
+            const isYearMode = dates.length > 0 && !dates[0].match(/^\d{4}-\d{2}-\d{2}$/);
+
             // Format dates for labels
-            const labels = dates.map(d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
+            const labels = isYearMode
+                ? dates // Already formatted month names (Jan, Fév, etc.)
+                : dates.map(d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
 
             const dataSeries = dates.map(date => {
                 const metrics = currentChartMetrics[date] || [];
                 if (zoneFilter === 'all') {
+                    // Use dailyTotalPax for global view (one value per date)
+                    const dailyTotal = metrics.length > 0 ? (metrics[0].dailyTotalPax || 0) : 0;
                     return {
-                        totalPax: metrics.reduce((sum, m) => sum + (m.paxTotal || 0), 0),
+                        totalPax: dailyTotal,  // Single dailyTotalPax for this date
                         totalMaintenanceHours: metrics.reduce((sum, m) => sum + ((m.dureeMaintenanceSeconds || 0) / 3600), 0),
                         totalAdditionnelleHours: metrics.reduce((sum, m) => sum + ((m.dureeAdditionnelleSeconds || 0) / 3600), 0),
                         totalAlerts: metrics.reduce((sum, m) => sum + (m.alertWOs || 0), 0)
@@ -658,7 +949,7 @@
                 } else {
                     const m = metrics.find(z => z.zoneName === zoneFilter) || {};
                     return {
-                        totalPax: m.paxTotal || 0,
+                        totalPax: m.paxTotal || 0,  // Keep per-zone paxTotal for zone-specific view
                         totalMaintenanceHours: (m.dureeMaintenanceSeconds || 0) / 3600,
                         totalAdditionnelleHours: (m.dureeAdditionnelleSeconds || 0) / 3600,
                         totalAlerts: m.alertWOs || 0
@@ -761,6 +1052,7 @@
             const s = {
                 totalZones: stats.totalZones || 0,
                 totalPax: stats.totalPax || 0,
+                totalAlerts: stats.totalAlerts || 0,
                 totalMaintenanceHours: stats.totalMaintenanceHours || 0,
                 totalAdditionnelleHours: stats.totalAdditionnelleHours || 0,
                 totalOccurrencesMaintenance: stats.totalOccurrencesMaintenance || 0,
@@ -770,6 +1062,7 @@
             const kpiConfig = [
                 { id: 'kpi-zones', label: 'Total Zones', value: s.totalZones, icon: 'ri-map-pin-line', isFloat: false, suffix: '' },
                 { id: 'kpi-pax', label: 'Total Passagers', value: s.totalPax, icon: 'ri-group-line', isFloat: false, suffix: '' },
+                { id: 'kpi-alerts', label: 'Total Alertes', value: s.totalAlerts || 0, icon: 'ri-alert-line', isFloat: false, suffix: '' },
                 { id: 'kpi-maint', label: 'Heures Maintenance', value: s.totalMaintenanceHours, icon: 'ri-tools-line', isFloat: true, suffix: 'h' },
                 { id: 'kpi-renfort', label: 'Heures Renfort', value: s.totalAdditionnelleHours, icon: 'ri-time-line', isFloat: true, suffix: 'h' }
             ];
@@ -876,9 +1169,9 @@
                 const specMin = Math.round((metric.dureeSpecificSeconds || 0) / 60);
 
                 // Real = Maint + Add Occurrences + Alertes
-                // Planned = minVisits
+                // Planned = maxVisits (pas minVisits)
                 const nbVisits = (metric.occurrencesMaintenance || 0) + (metric.occurrencesAdditionnelles || 0) + (metric.alertWOs || 0);
-                const maxVisits = metric.minVisits || 0;
+                const maxVisits = metric.maxVisits || 0;
                 let visitBadgeClass = 'badge-neutral';
                 if (maxVisits > 0) {
                     if (nbVisits === maxVisits) visitBadgeClass = 'badge-success';
@@ -1074,7 +1367,119 @@
         }
 
         loadAvailableDates();
+
+        // Chatbot Functions
+        function toggleChatbotTest() {
+            const body = document.getElementById('chatbotTestBody');
+            const icon = document.getElementById('chatbotTestIcon');
+
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                icon.className = 'ri-arrow-down-s-line';
+            } else {
+                body.style.display = 'none';
+                icon.className = 'ri-arrow-right-s-line';
+            }
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatbotInput');
+            const question = input.value.trim();
+
+            if (!question) return;
+
+            // Afficher la question de l'utilisateur
+            addChatMessage(question, 'user');
+            input.value = '';
+
+            // Afficher l'indicateur de typing
+            addTypingIndicator();
+
+            try {
+                const response = await fetch(`${API_URL}/chat/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question,
+                        date: availableDates[currentDateIndex]
+                    })
+                });
+
+                const data = await response.json();
+
+                // Retirer l'indicateur de typing
+                removeTypingIndicator();
+
+                if (data.success) {
+                    addChatMessage(data.response, 'assistant', data.logId);
+                } else {
+                    addChatMessage(`Erreur : ${data.error}`, 'error');
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                addChatMessage('Impossible de contacter le serveur. Vérifiez que le backend est démarré.', 'error');
+            }
+        }
+
+        function addChatMessage(text, type, logId) {
+            const messagesDiv = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chatbot-message ${type}`;
+
+            if (type === 'assistant' && logId) {
+                messageDiv.innerHTML = `
+                    <div class="message-content">${text}</div>
+                    <div class="message-feedback">
+                        <button class="btn btn-icon btn-sm" onclick="sendFeedback(${logId}, 1)" title="Utile">
+                            <i class="ri-thumb-up-line"></i>
+                        </button>
+                        <button class="btn btn-icon btn-sm" onclick="sendFeedback(${logId}, -1)" title="Pas utile">
+                            <i class="ri-thumb-down-line"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                messageDiv.textContent = text;
+            }
+
+            messagesDiv.appendChild(messageDiv);
+
+            // Scroll vers le bas
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const messagesDiv = document.getElementById('chatbotMessages');
+            const typing = document.createElement('div');
+            typing.id = 'typingIndicator';
+            typing.className = 'chatbot-message assistant typing';
+            typing.innerHTML = '<span>⏳</span> Réflexion en cours...';
+            messagesDiv.appendChild(typing);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        async function sendFeedback(logId, rating) {
+            try {
+                await fetch(`${API_URL}/chat/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ logId, rating })
+                });
+            } catch (error) {
+                console.error('Failed to send feedback:', error);
+            }
+        }
     </script>
+
 </body>
 
 </html>

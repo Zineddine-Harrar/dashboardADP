@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { ChatLogService } from './chat-log.service';
 
@@ -14,7 +14,7 @@ export class ChatbotService {
         let logId: number;
 
         try {
-            // 1. Récupérer les données du dashboard
+            // 1. R├®cup├®rer les donn├®es du dashboard
             const context = await this.getContext(date, question);
 
             // 2. Construire le prompt pour Ollama
@@ -25,7 +25,7 @@ export class ChatbotService {
             const anonymizedPrompt = this.buildPrompt(question, anonymizedContext);
             const response = await this.callOpenAI(anonymizedPrompt);
 
-            // 4. Logger l'interaction réussie
+            // 4. Logger l'interaction r├®ussie
             logId = await this.chatLogService.logInteraction({
                 question,
                 response,
@@ -50,15 +50,15 @@ export class ChatbotService {
     }
 
     private async getContext(date?: string, question?: string): Promise<any> {
-        // Extraire la date de la question si mentionnée
+        // Extraire la date de la question si mentionn├®e
         const extractedDate = question ? this.extractDateFromQuestion(question) : null;
         const targetDate = extractedDate || date || await this.getLatestDate();
 
-        // Détecter si la question porte sur une période (mois)
-        const monthMatch = question?.toLowerCase().match(/tout le mois (?:de |d')?(\w+)|mois (?:de |d')?(\w+)|novembre|décembre|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre/i);
+        // D├®tecter si la question porte sur une p├®riode (mois)
+        const monthMatch = question?.toLowerCase().match(/tout le mois (?:de |d')?(\w+)|mois (?:de |d')?(\w+)|novembre|d├®cembre|janvier|f├®vrier|mars|avril|mai|juin|juillet|ao├╗t|septembre|octobre/i);
         const isMonthQuery = monthMatch !== null;
 
-        // Récupérer TOUTES les zones pour la date cible
+        // R├®cup├®rer TOUTES les zones pour la date cible
         const metrics = await this.prisma.dailyZoneCleaningMetrics.findMany({
             where: {
                 date: new Date(targetDate),
@@ -70,10 +70,11 @@ export class ChatbotService {
                 occurrencesAdditionnelles: true,
                 alertWOs: true,
                 paxTotal: true,
+                dailyTotalPax: true,
                 dureeMaintenanceSeconds: true,
                 dureeAdditionnelleSeconds: true,
                 date: true,
-                // NE PAS inclure les noms agents/managers pour confidentialité
+                // NE PAS inclure les noms agents/managers pour confidentialit├®
             },
             orderBy: [
                 { occurrencesMaintenance: 'desc' },
@@ -81,7 +82,7 @@ export class ChatbotService {
             ]
         });
 
-        // Récupérer TOUTES les dates disponibles
+        // R├®cup├®rer TOUTES les dates disponibles
         const allDates = await this.prisma.dailyZoneCleaningMetrics.findMany({
             select: { date: true },
             distinct: ['date'],
@@ -89,7 +90,7 @@ export class ChatbotService {
             take: 31 // Maximum 31 jours
         });
 
-        // Si la question porte sur un mois, récupérer les stats de toutes les dates du mois
+        // Si la question porte sur un mois, r├®cup├®rer les stats de toutes les dates du mois
         let monthlyStats = null;
         if (isMonthQuery) {
             const targetYear = new Date(targetDate).getFullYear();
@@ -151,7 +152,7 @@ export class ChatbotService {
         // Calculer des statistiques globales pour la date cible
         const summary = {
             totalZones: metrics.length,
-            totalPax: metrics.reduce((sum, m) => sum + (m.paxTotal || 0), 0),
+            totalPax: metrics.length > 0 && metrics[0].dailyTotalPax ? metrics[0].dailyTotalPax : metrics.reduce((sum, m) => sum + (m.paxTotal || 0), 0),
             totalAlerts: metrics.reduce((sum, m) => sum + (m.alertWOs || 0), 0),
             totalMaintenanceHours: metrics.reduce(
                 (sum, m) => sum + (m.dureeMaintenanceSeconds || 0) / 3600,
@@ -166,15 +167,15 @@ export class ChatbotService {
             date: targetDate,
         };
 
-        // Si la question porte sur une période, calculer les stats par date
+        // Si la question porte sur une p├®riode, calculer les stats par date
         const availableDates = allDates.map(d => d.date.toISOString().split('T')[0]);
 
         return {
             metrics, // TOUTES les zones de la date cible
-            summary, // Résumé de la date cible
+            summary, // R├®sum├® de la date cible
             availableDates, // Toutes les dates disponibles
-            targetDate, // Date utilisée
-            monthlyStats // Stats mensuelles si question sur période
+            targetDate, // Date utilis├®e
+            monthlyStats // Stats mensuelles si question sur p├®riode
         };
     }
 
@@ -187,19 +188,19 @@ export class ChatbotService {
     }
 
     private extractDateFromQuestion(question: string): string | null {
-        // Mapping des mois en français
+        // Mapping des mois en fran├ºais
         const monthMap: { [key: string]: string } = {
-            'janvier': '01', 'février': '02', 'mars': '03', 'avril': '04',
-            'mai': '05', 'juin': '06', 'juillet': '07', 'août': '08',
-            'septembre': '09', 'octobre': '10', 'novembre': '11', 'décembre': '12'
+            'janvier': '01', 'f├®vrier': '02', 'mars': '03', 'avril': '04',
+            'mai': '05', 'juin': '06', 'juillet': '07', 'ao├╗t': '08',
+            'septembre': '09', 'octobre': '10', 'novembre': '11', 'd├®cembre': '12'
         };
 
-        // Regex pour différents formats de date
+        // Regex pour diff├®rents formats de date
         const patterns = [
-            // Format: "1er novembre" ou "le 1er novembre" (avec ou sans année)
-            /(?:le\s+)?(\d{1,2})(?:er|ème)?\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)(?:\s+(\d{4}))?/i,
-            // Format: "2 décembre 2025"
-            /(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(\d{4})/i,
+            // Format: "1er novembre" ou "le 1er novembre" (avec ou sans ann├®e)
+            /(?:le\s+)?(\d{1,2})(?:er|├¿me)?\s+(janvier|f├®vrier|mars|avril|mai|juin|juillet|ao├╗t|septembre|octobre|novembre|d├®cembre)(?:\s+(\d{4}))?/i,
+            // Format: "2 d├®cembre 2025"
+            /(\d{1,2})\s+(janvier|f├®vrier|mars|avril|mai|juin|juillet|ao├╗t|septembre|octobre|novembre|d├®cembre)\s+(\d{4})/i,
             // Format: "02/12/2025"
             /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
             // Format: "2025-12-02"
@@ -210,19 +211,19 @@ export class ChatbotService {
             const match = question.match(pattern);
             if (match) {
                 if (pattern.source.includes('janvier')) {
-                    // Format avec nom de mois ("2 décembre 2025" ou "1er novembre")
+                    // Format avec nom de mois ("2 d├®cembre 2025" ou "1er novembre")
                     const day = match[1].padStart(2, '0');
                     const month = monthMap[match[2].toLowerCase()];
-                    const year = match[3] || new Date().getFullYear().toString(); // Année actuelle si non spécifiée
+                    const year = match[3] || new Date().getFullYear().toString(); // Ann├®e actuelle si non sp├®cifi├®e
                     return `${year}-${month}-${day}`;
                 } else if (pattern.source.includes('\\/')) {
-                    // Format: "02/12/2025" (jour/mois/année)
+                    // Format: "02/12/2025" (jour/mois/ann├®e)
                     const day = match[1].padStart(2, '0');
                     const month = match[2].padStart(2, '0');
                     const year = match[3];
                     return `${year}-${month}-${day}`;
                 } else {
-                    // Format: "2025-12-02" (déjà bon format)
+                    // Format: "2025-12-02" (d├®j├á bon format)
                     return match[0];
                 }
             }
@@ -232,43 +233,43 @@ export class ChatbotService {
     }
 
     private buildPrompt(question: string, context: any): string {
-        const systemPrompt = `Tu es un assistant analytique spécialisé dans les données de nettoyage aéroportuaire.
+        const systemPrompt = `Tu es un assistant analytique sp├®cialis├® dans les donn├®es de nettoyage a├®roportuaire.
 
-    🔴 RÈGLES CRITIQUES À RESPECTER ABSOLUMENT:
+    ­ƒö┤ R├êGLES CRITIQUES ├Ç RESPECTER ABSOLUMENT:
 
-    1️⃣ MOYENNES DÉJÀ CALCULÉES
-    Les durées moyennes que je te fournis sont des valeurs FINALES.
-    La colonne "Durée Moy." contient des moyennes DÉJÀ CALCULÉES.
-    ❌ Ne JAMAIS diviser par le nombre de passagers
-    ❌ Ne JAMAIS recalculer les moyennes
-    ✅ Utiliser directement les valeurs fournies
+    1´©ÅÔâú MOYENNES D├ëJ├Ç CALCUL├ëES
+    Les dur├®es moyennes que je te fournis sont des valeurs FINALES.
+    La colonne "Dur├®e Moy." contient des moyennes D├ëJ├Ç CALCUL├ëES.
+    ÔØî Ne JAMAIS diviser par le nombre de passagers
+    ÔØî Ne JAMAIS recalculer les moyennes
+    Ô£à Utiliser directement les valeurs fournies
 
-    2️⃣ DEUX MÉTRIQUES DISTINCTES - NE PAS CONFONDRE !
+    2´©ÅÔâú DEUX M├ëTRIQUES DISTINCTES - NE PAS CONFONDRE !
     
     MAINTENANCE (nettoyage routine) = dureeMaintenanceSeconds
-    → Entretien régulier planifié, nettoyage de base
+    ÔåÆ Entretien r├®gulier planifi├®, nettoyage de base
     
     RENFORT (nettoyage additionnel) = dureeAdditionnelleSeconds
-    → Nettoyage supplémentaire non planifié, intervention exceptionnelle
+    ÔåÆ Nettoyage suppl├®mentaire non planifi├®, intervention exceptionnelle
     
-    ⚠️ ATTENTION: Ce sont deux métriques DIFFÉRENTES !
-    Quand l'utilisateur demande "renfort" → utilise dureeAdditionnelleSeconds
-    Quand l'utilisateur demande "maintenance" → utilise dureeMaintenanceSeconds
+    ÔÜá´©Å ATTENTION: Ce sont deux m├®triques DIFF├ëRENTES !
+    Quand l'utilisateur demande "renfort" ÔåÆ utilise dureeAdditionnelleSeconds
+    Quand l'utilisateur demande "maintenance" ÔåÆ utilise dureeMaintenanceSeconds
 
-    3️⃣ MAPPING DES DONNÉES
-    - "Renfort" / "Heures additionnelles" / "Heures de renfort" → dureeAdditionnelleSeconds
-    - "Maintenance" / "Entretien" / "Nettoyage routine" → dureeMaintenanceSeconds
-    - "Alertes" / "Alert WOs" → alertWOs
-    - "Passagers" / "PAX" / "Passagers totaux" → paxTotal
+    3´©ÅÔâú MAPPING DES DONN├ëES
+    - "Renfort" / "Heures additionnelles" / "Heures de renfort" ÔåÆ dureeAdditionnelleSeconds
+    - "Maintenance" / "Entretien" / "Nettoyage routine" ÔåÆ dureeMaintenanceSeconds
+    - "Alertes" / "Alert WOs" ÔåÆ alertWOs
+    - "Passagers" / "PAX" / "Passagers totaux" ÔåÆ paxTotal
 
-    4️⃣ CAPACITÉ D'ANALYSE TEMPORELLE
-    Tu as accès aux données sur PLUSIEURS dates.
-    Pour analyser une tendance, compare les métriques entre les différentes dates disponibles.
-    Les données ne sont PAS limitées à une seule date.
+    4´©ÅÔâú CAPACIT├ë D'ANALYSE TEMPORELLE
+    Tu as acc├¿s aux donn├®es sur PLUSIEURS dates.
+    Pour analyser une tendance, compare les m├®triques entre les diff├®rentes dates disponibles.
+    Les donn├®es ne sont PAS limit├®es ├á une seule date.
 
-    ═══════════════════════════════════════════════════
+    ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
 
-    DONNÉES DU ${context.summary.date}:
+    DONN├ëES DU ${context.summary.date}:
     - Nombre de zones: ${context.summary.totalZones}
     - Passagers totaux: ${context.summary.totalPax.toLocaleString('fr-FR')}
     - Alertes totales: ${context.summary.totalAlerts}
@@ -277,14 +278,14 @@ export class ChatbotService {
     - Occurrences MAINTENANCE: ${context.summary.totalOccurrencesMaintenance}
     - Occurrences ADDITIONNELLES: ${context.summary.totalOccurrencesAdditionnelles}
 
-    DATES DISPONIBLES DANS LA BASE (pour questions sur période):
+    DATES DISPONIBLES DANS LA BASE (pour questions sur p├®riode):
     ${context.availableDates ? context.availableDates.slice(0, 10).join(', ') : 'N/A'}
     ${context.availableDates && context.availableDates.length > 10 ? `... et ${context.availableDates.length - 10} autres dates` : ''}
 
     ${context.monthlyStats ? `
-    ═══════ STATISTIQUES DU MOIS ═══════
+    ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ STATISTIQUES DU MOIS ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
     Mois: ${context.monthlyStats.month}
-    Nombre de jours avec données: ${context.monthlyStats.numberOfDays}
+    Nombre de jours avec donn├®es: ${context.monthlyStats.numberOfDays}
     
     MOYENNES PAR JOUR:
     - Alertes: ${context.monthlyStats.avgAlertsPerDay.toFixed(1)} alertes/jour
@@ -298,30 +299,30 @@ export class ChatbotService {
     - Total passagers: ${context.monthlyStats.totalPax.toLocaleString('fr-FR')}
     
     Dates du mois: ${context.monthlyStats.daysList.slice(0, 5).join(', ')}${context.monthlyStats.daysList.length > 5 ? ` ... (${context.monthlyStats.daysList.length} jours au total)` : ''}
-    ═══════════════════════════════════════
+    ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
     ` : ''}
 
-    DÉTAIL PAR ZONE - TOUTES LES ${context.metrics.length} ZONES (durées moyennes DÉJÀ calculées):
+    D├ëTAIL PAR ZONE - TOUTES LES ${context.metrics.length} ZONES (dur├®es moyennes D├ëJ├Ç calcul├®es):
     ${context.metrics
                 .map((m: any) => {
                     const maintenanceMin = Math.round((m.dureeMaintenanceSeconds || 0) / 60);
                     const renfortMin = Math.round((m.dureeAdditionnelleSeconds || 0) / 60);
                     const totalOccurrences = (m.occurrencesMaintenance || 0) + (m.occurrencesAdditionnelles || 0);
                     return `- ${m.zoneName}:
-  → Occurrences totales: ${totalOccurrences} (${m.occurrencesMaintenance || 0} maintenance + ${m.occurrencesAdditionnelles || 0} additionnelles)
-  → Maintenance: ${maintenanceMin} min
-  → Renfort: ${renfortMin} min
-  → Passagers: ${m.paxTotal}
-  → Alertes: ${m.alertWOs || 0}`;
+  ÔåÆ Occurrences totales: ${totalOccurrences} (${m.occurrencesMaintenance || 0} maintenance + ${m.occurrencesAdditionnelles || 0} additionnelles)
+  ÔåÆ Maintenance: ${maintenanceMin} min
+  ÔåÆ Renfort: ${renfortMin} min
+  ÔåÆ Passagers: ${m.paxTotal}
+  ÔåÆ Alertes: ${m.alertWOs || 0}`;
                 })
                 .join('\n')}
 
-    ═══════════════════════════════════════════════════
+    ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
 
-    EXEMPLES DE BONNES RÉPONSES:
+    EXEMPLES DE BONNES R├ëPONSES:
 
-    Q: "Quelle zone a la plus grande durée moyenne de maintenance?"
-    R: "BS Femmes départ F1 a la plus grande durée moyenne avec 144 minutes (2.4h) de maintenance."
+    Q: "Quelle zone a la plus grande dur├®e moyenne de maintenance?"
+    R: "BS Femmes d├®part F1 a la plus grande dur├®e moyenne avec 144 minutes (2.4h) de maintenance."
 
     Q: "Top 5 zones par heures de renfort"
     R: "1. Zone A: 85 min de renfort
@@ -336,21 +337,21 @@ export class ChatbotService {
     - 29/11: 48.3h (-8%)
     Tendance: Relativement stable autour de 48h."
 
-    ❌ ERREURS À ÉVITER:
+    ÔØî ERREURS ├Ç ├ëVITER:
     - Ne PAS dire "2.4h / 12251 passagers = 0.0195h/passager"
     - Ne PAS confondre maintenance et renfort
-    - Ne PAS dire "les données manquent" si elles existent
+    - Ne PAS dire "les donn├®es manquent" si elles existent
     - Ne PAS recalculer les moyennes
 
     QUESTION: ${question}
 
-    Réponds de manière claire, concise et PRÉCISE en français.
-    Si tu ne peux pas répondre avec les données fournies, dis-le clairement.`;
+    R├®ponds de mani├¿re claire, concise et PR├ëCISE en fran├ºais.
+    Si tu ne peux pas r├®pondre avec les donn├®es fournies, dis-le clairement.`;
 
         return systemPrompt;
     }
 
-    // Anonymiser les données avant envoi à OpenAI
+    // Anonymiser les donn├®es avant envoi ├á OpenAI
     private anonymizeData(context: any): any {
         return {
             metrics: context.metrics.map((m: any) => ({
@@ -362,7 +363,7 @@ export class ChatbotService {
                 dureeAdditionnelleSeconds: m.dureeAdditionnelleSeconds,
                 occurrencesMaintenance: m.occurrencesMaintenance,
                 occurrencesAdditionnelles: m.occurrencesAdditionnelles,
-                // NE PAS inclure: agents, managers, noms d'équipe
+                // NE PAS inclure: agents, managers, noms d'├®quipe
             })),
             summary: context.summary,
             availableDates: context.availableDates, // IMPORTANT: Conserver les dates disponibles
@@ -373,47 +374,44 @@ export class ChatbotService {
 
     private async callOpenAI(prompt: string): Promise<string> {
         try {
-            const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+            const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
 
             if (!OPENAI_API_KEY) {
-                throw new Error('OPENAI_API_KEY not configured in environment variables');
+                throw new Error('OPENAI_API_KEY or OPENROUTER_API_KEY not configured in environment variables');
             }
 
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                    'HTTP-Referer': 'http://localhost:3000',
+                    'X-Title': 'DATALIAN Chatbot',
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini', // 20x moins cher que gpt-4o, toujours excellent
+                    model: 'xiaomi/mimo-v2-flash:free', // XIAOMI MiMo-V2-Flash (256K context, Claude-level performance)
                     messages: [
                         {
-                            role: 'system',
-                            content: 'Tu es un assistant analytique spécialisé dans les données de nettoyage aéroportuaire. Réponds de manière précise et concise en français.'
-                        },
-                        {
                             role: 'user',
-                            content: prompt
+                            content: prompt  // Le prompt contient d├®j├á TOUT (syst├¿me + donn├®es + question)
                         }
                     ],
-                    temperature: 0.2,
-                    max_tokens: 500,
+                    temperature: 0.1,  // Plus bas = plus coh├®rent et pr├®visible
+                    max_tokens: 800,   // Plus de tokens pour r├®ponses compl├¿tes
+                    top_p: 0.9,
                 }),
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`OpenAI API error: ${response.statusText} - ${JSON.stringify(errorData)}`);
+                const errorText = await response.text();
+                throw new Error(`OpenRouter returned ${response.status}: ${errorText}`);
             }
 
             const data = await response.json();
             return data.choices[0].message.content;
         } catch (error) {
-            console.error('Error calling OpenAI:', error);
-            throw new Error(
-                `Impossible de contacter OpenAI: ${error.message}`,
-            );
+            console.error('[CHATBOT] Error calling OpenRouter:', error);
+            throw new Error(`Impossible de contacter OpenAI: ${error.message}`);
         }
     }
 }
