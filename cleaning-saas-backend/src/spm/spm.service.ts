@@ -5,15 +5,36 @@ import * as fs from 'fs';
 
 @Injectable()
 export class SpmService {
-    private readonly filePath = path.join(process.cwd(), 'data/input/spm/2025-SPM.xlsx');
-
-    getSpmData() {
+    getSpmData(year?: string) {
         try {
-            if (!fs.existsSync(this.filePath)) {
-                throw new Error(`File not found: ${this.filePath}`);
+            const spmDir = path.join(process.cwd(), 'data/input/spm');
+            // ... (keep the rest)
+            if (!fs.existsSync(spmDir)) {
+                throw new Error(`Directory not found: ${spmDir}`);
             }
 
-            const workbook = XLSX.readFile(this.filePath);
+            const files = fs.readdirSync(spmDir).filter(f => f.endsWith('-SPM.xlsx'));
+            if (files.length === 0) {
+                throw new Error(`No SPM file found in ${spmDir}`);
+            }
+
+            let targetFile: string;
+            if (year) {
+                const matching = files.find(f => f.startsWith(year));
+                if (matching) {
+                    targetFile = path.join(spmDir, matching);
+                } else {
+                    // Fallback to latest if year not found
+                    const sortedFiles = files.sort((a, b) => b.localeCompare(a));
+                    targetFile = path.join(spmDir, sortedFiles[0]);
+                }
+            } else {
+                // By default, pick the latest year found in filenames
+                const sortedFiles = files.sort((a, b) => b.localeCompare(a));
+                targetFile = path.join(spmDir, sortedFiles[0]);
+            }
+
+            const workbook = XLSX.readFile(targetFile);
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });

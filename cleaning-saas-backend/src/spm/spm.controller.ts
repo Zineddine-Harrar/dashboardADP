@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SpmService } from './spm.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -8,7 +8,7 @@ export class SpmController {
     constructor(private readonly spmService: SpmService) { }
 
     @Get()
-    getSpmData() {
-        return this.spmService.getSpmData();
+    getSpmData(@Query('year') year?: string) {
+        return this.spmService.getSpmData(year);
     }
 }

@@ -569,7 +569,6 @@
                 chartsGrid.style.display = 'grid';
                 if (spmContainer) spmContainer.style.display = 'block';
                 loadSelectedYear();
-                loadSpmData();
             } else if (isMonth) {
                 chartsGrid.style.display = 'grid';
                 if (spmContainer) spmContainer.style.display = 'none';
@@ -663,6 +662,8 @@
             currentYearIndex = index;
             const year = years[index];
             if (!year) return;
+
+            loadSpmData(year.year);
 
             setLoading(true);
             try {
@@ -1652,13 +1653,18 @@
         // ==========================================
         // SPM CHART LOGIC
         // ==========================================
-        async function loadSpmData() {
-            if (spmData) return; // Already loaded
+        let currentSpmYear = null;
+        async function loadSpmData(year) {
+            // If year is not provided, we might still want to default to something, 
+            // but usually we'll have a year from the selector.
+            if (currentSpmYear === year && spmData) return;
 
             try {
-                const response = await fetchWithAuth(`${API_URL}/spm`);
+                const url = year ? `${API_URL}/spm?year=${year}` : `${API_URL}/spm`;
+                const response = await fetchWithAuth(url);
                 if (!response.ok) throw new Error('Failed to load SPM data');
                 spmData = await response.json();
+                currentSpmYear = year;
                 updateSpmChart();
             } catch (error) {
                 console.error('Error loading SPM data:', error);
