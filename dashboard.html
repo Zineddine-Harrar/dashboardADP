@@ -111,6 +111,23 @@
         <div class="stats-grid animate-enter" id="statsGrid" style="animation-delay: 100ms">
         </div>
 
+        <!-- SPM Evolution Chart (Year Mode Only) -->
+        <div id="spmContainer" class="card animate-enter" style="display: none; margin-bottom: 2rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="card-title">Évolution des Notes SPM</h2>
+                <div>
+                    <select id="spmTypeSelector" onchange="updateSpmChart()" class="btn"
+                        style="border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 8px;">
+                        <option value="general">Zones Générales</option>
+                        <option value="sanitary">Blocs Sanitaires</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 400px; padding: 1rem; position: relative;">
+                <canvas id="spmChart"></canvas>
+            </div>
+        </div>
+
         <!-- Charts Grid -->
         <div class="charts-grid animate-enter" style="animation-delay: 200ms">
             <!-- Chart 1: Passagers & Renfort -->
@@ -355,6 +372,9 @@
         let chart3 = null;
         let topZonesChart = null;
 
+        let spmData = null;
+        let spmChart = null;
+
         let allMetrics = [];
         let allZones = [];
         let allMetricsByDate = {}; // Legacy global, kept if needed but scoped logic preferred
@@ -543,18 +563,24 @@
 
             // Toggle Logic
             const chartsGrid = document.querySelector('.charts-grid');
+            const spmContainer = document.getElementById('spmContainer');
 
             if (isYear) {
                 chartsGrid.style.display = 'grid';
+                if (spmContainer) spmContainer.style.display = 'block';
                 loadSelectedYear();
+                loadSpmData();
             } else if (isMonth) {
                 chartsGrid.style.display = 'grid';
+                if (spmContainer) spmContainer.style.display = 'none';
                 loadSelectedMonth();
             } else if (isWeek) {
                 chartsGrid.style.display = 'grid';
+                if (spmContainer) spmContainer.style.display = 'none';
                 loadSelectedWeek();
             } else {
                 chartsGrid.style.display = 'none';
+                if (spmContainer) spmContainer.style.display = 'none';
                 loadSelectedDate();
             }
         }
@@ -1621,6 +1647,157 @@
             } catch (error) {
                 console.error('Failed to send feedback:', error);
             }
+        }
+
+        // ==========================================
+        // SPM CHART LOGIC
+        // ==========================================
+        async function loadSpmData() {
+            if (spmData) return; // Already loaded
+
+            try {
+                const response = await fetchWithAuth(`${API_URL}/spm`);
+                if (!response.ok) throw new Error('Failed to load SPM data');
+                spmData = await response.json();
+                updateSpmChart();
+            } catch (error) {
+                console.error('Error loading SPM data:', error);
+                const container = document.getElementById('spmContainer');
+                if (container) container.innerHTML = `<div class="error-state">Erreur de chargement des données SPM</div>`;
+            }
+        }
+
+        function updateSpmChart() {
+            if (!spmData) return;
+            const type = document.getElementById('spmTypeSelector').value;
+            renderSpmChart(type);
+        }
+
+        function renderSpmChart(type) {
+            const canvas = document.getElementById('spmChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            if (spmChart) spmChart.destroy();
+
+            // Filter items based on type
+            let items = [];
+            let colors = [];
+            let targetColors = [];
+
+            if (type === 'general') {
+                items = spmData.items.filter(i => i.name.toLowerCase().includes('générales'));
+                // "Mêmes bleus que pour les BS"
+                // Elements Clés (Index 0): Less Dark Blue (Blue-700)
+                // Autres Éléments (Index 1): Light Blue
+                colors = ['#1d4ed8', '#60a5fa'];
+                // Target color (Orange) - Distinct from Real (Single curve)
+                targetColors = ['#f59e0b'];
+            } else {
+                items = spmData.items.filter(i => i.name.toLowerCase().includes('sanitaires'));
+                // "Objectif et valeur réel ... meme couleur"
+                // Elements Clés (Index 0): Less Dark Blue (Blue-700)
+                // Autres Éléments (Index 1): Light Blue
+                colors = ['#1d4ed8', '#60a5fa'];
+                targetColors = ['#1d4ed8', '#60a5fa'];
+            }
+
+            const labels = spmData.months;
+            const datasets = [];
+
+            // Targets (Dashed Lines)
+            // Order 1 ensures they are drawn on top/bottom appropriately, sticking with standard order
+
+            if (type === 'general') {
+                // Single Target Line
+                if (items.length > 0) {
+                    const targetVal = items[0].target;
+                    datasets.push({
+                        label: 'Objectif',
+                        data: new Array(labels.length).fill(targetVal),
+                        borderColor: targetColors[0],
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    });
+                }
+            } else {
+                // Multiple Target Lines matched to items
+                items.forEach((item, index) => {
+                    // Ensure we match colors correctly. items[0] -> Dark Blue, items[1] -> Light Blue
+                    const color = targetColors[index] || targetColors[0];
+
+                    datasets.push({
+                        label: `Objectif (${item.name.replace('Blocs Sanitaires (', '').replace(')', '')})`,
+                        data: new Array(labels.length).fill(item.target),
+                        borderColor: color,
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    });
+                });
+            }
+
+            // Real Data (Solid Lines)
+            items.forEach((item, index) => {
+                const dataPoints = labels.map(m => item.data[m]);
+                const color = colors[index] || colors[0];
+
+                datasets.push({
+                    label: item.name.replace('Zones générales (', '').replace('Blocs Sanitaires (', '').replace(')', ''),
+                    data: dataPoints,
+                    borderColor: color,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.3
+                });
+            });
+
+            // Determine min/max for Y axis scaling
+            const allValues = [
+                ...datasets.flatMap(d => d.data),
+                ...items.map(i => i.target)
+            ];
+            const minVal = Math.min(...allValues) - 0.5;
+            const maxVal = Math.max(...allValues) + 0.5;
+
+            spmChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { usePointStyle: true }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: Math.max(0, Math.floor(minVal)),
+                            max: Math.ceil(maxVal)
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
         }
     </script>
 
