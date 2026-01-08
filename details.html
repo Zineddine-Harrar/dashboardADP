@@ -28,11 +28,11 @@
                 <h1>DATALIAN KPI</h1>
             </div>
             <nav class="page-nav">
-                <a href="dashboard.html" class="page-nav-btn active">
+                <a href="dashboard.html" class="page-nav-btn">
                     <i class="ri-dashboard-3-line"></i>
                     <span>Vue d'ensemble</span>
                 </a>
-                <a href="details.html" class="page-nav-btn">
+                <a href="details.html" class="page-nav-btn active">
                     <i class="ri-table-line"></i>
                     <span>Détails</span>
                 </a>
@@ -107,90 +107,36 @@
             <span>Chargement des données...</span>
         </div>
 
-        <!-- KPI Grid -->
-        <div class="stats-grid animate-enter" id="statsGrid" style="animation-delay: 100ms">
-        </div>
 
-        <!-- Charts Grid -->
-        <div class="charts-grid animate-enter" style="animation-delay: 200ms">
-            <!-- Chart 1: Passagers & Renfort -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Passagers & Renfort</h2>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <select id="zoneFilter1" class="chart-zone-filter" onchange="updateChart(1)">
-                            <option value="all">Toutes les zones</option>
-                        </select>
-                        <button class="btn btn-icon" onclick="openChartModal(1)" title="Agrandir">
-                            <i class="ri-fullscreen-line"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="chart1"></canvas>
-                </div>
-            </div>
-
-            <!-- Chart 2: Passagers & Alertes -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Passagers & Alertes</h2>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <select id="zoneFilter2" class="chart-zone-filter" onchange="updateChart(2)">
-                            <option value="all">Toutes les zones</option>
-                        </select>
-                        <button class="btn btn-icon" onclick="openChartModal(2)" title="Agrandir">
-                            <i class="ri-fullscreen-line"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="chart2"></canvas>
-                </div>
-            </div>
-
-            <!-- Chart 3: Passagers & Maintenance -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Passagers & Maintenance</h2>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <select id="zoneFilter3" class="chart-zone-filter" onchange="updateChart(3)">
-                            <option value="all">Toutes les zones</option>
-                        </select>
-                        <button class="btn btn-icon" onclick="openChartModal(3)" title="Agrandir">
-                            <i class="ri-fullscreen-line"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="chart3"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Top Zones Histogram -->
-        <div class="card animate-enter" style="animation-delay: 250ms">
+        <!-- Data Table -->
+        <div class="card animate-enter" style="animation-delay: 300ms">
             <div class="card-header">
-                <h2 class="card-title">Top Zones les plus Visitées</h2>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <span style="font-size: 0.8125rem; color: var(--text-muted);">Afficher :</span>
-                    <select id="topZonesLimit" class="chart-zone-filter" onchange="renderTopZonesChart()"
-                        style="width: auto;">
-                        <option value="5">Top 5</option>
-                        <option value="10">Top 10</option>
-                        <option value="15">Top 15</option>
-                        <option value="30">Top 30</option>
-                        <option value="all">Tout</option>
-                    </select>
-                </div>
+                <h2 class="card-title">Détail des Zones</h2>
             </div>
-            <div class="chart-wrapper" style="height: auto;">
-                <div id="topZonesContainer" style="height: 350px;">
-                    <canvas id="chartTopZones"></canvas>
+            <div class="table-controls">
+                <div class="search-input">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="searchZone" placeholder="Rechercher une zone..."
+                        oninput="applyFiltersAndSort()">
+                </div>
+                <div style="flex: 1;"></div>
+                <select id="rowLimit" onchange="applyFiltersAndSort()" style="width: auto;">
+                    <option value="10">10 lignes</option>
+                    <option value="30" selected>30 lignes</option>
+                    <option value="50">50 lignes</option>
+                    <option value="all">Tout afficher</option>
+                </select>
+            </div>
+
+            <div class="table-container" style="overflow-x: auto;">
+                <div id="tableContent">
+                    <div class="loading-state">Chargement du tableau...</div>
+                </div>
+                <div id="displayInfo"
+                    style="padding: 1rem 1.5rem; color: var(--text-muted); font-size: 0.875rem; text-align: right;">
                 </div>
             </div>
         </div>
-
 
         <!-- Fullscreen Chart Modal -->
         <div id="chartModal" class="chart-modal" onclick="closeChartModal(event)">
@@ -208,37 +154,13 @@
         </div>
 
         <!-- Chatbot Widget -->
-        <div id="chatbotTest" class="chatbot-test-widget">
-            <div class="chatbot-test-header" onclick="toggleChatbotTest()">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <img src="atalian-cat.png" alt="Chat Atalian"
-                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-                    <h3>Le Chat de DATALIAN</h3>
-                </div>
-                <button class="btn btn-icon">
-                    <i id="chatbotTestIcon" class="ri-arrow-down-s-line"></i>
-                </button>
-            </div>
-            <div id="chatbotTestBody" class="chatbot-test-body">
-                <div id="chatbotMessages" class="chatbot-messages">
-                    <div class="chatbot-message assistant">
-                        Bonjour ! Je suis votre assistant d'analyse de données. Posez-moi des questions sur vos
-                        métriques de nettoyage !
-                    </div>
-                </div>
-                <div class="chatbot-input-group">
-                    <input type="text" id="chatbotInput" placeholder="Ex: Quelle zone a le plus d'alertes ?"
-                        onkeypress="if(event.key==='Enter') sendChatMessage()" />
-                    <button onclick="sendChatMessage()" class="btn btn-primary">
-                        <i class="ri-send-plane-fill"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <footer class="footer">
-            <p>&copy; 2025 Atalian Global Services &bull; Dashboard Analytics</p>
-        </footer>
+
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Atalian Global Services &bull; Dashboard Analytics</p>
+    </footer>
     </div>
 
     <script>
@@ -364,10 +286,20 @@
         // Chatbot History
         let chatHistory = [];
 
-        // Helper to safely toggle loading state
         function setLoading(isVisible) {
             const el = document.getElementById('globalLoading');
             if (el) el.style.display = isVisible ? 'flex' : 'none';
+        }
+
+        function showError(message) {
+            const grid = document.getElementById('statsGrid');
+            if (grid) {
+                grid.innerHTML = `<div class="error-state"><i class="ri-error-warning-line"></i> ${message}</div>`;
+            }
+            const table = document.getElementById('tableContent');
+            if (table) {
+                table.innerHTML = `<div class="error-state"><i class="ri-error-warning-line"></i> ${message}</div>`;
+            }
         }
 
         // Initialize
@@ -379,8 +311,7 @@
                 availableDates = data.dates || [];
 
                 if (availableDates.length === 0) {
-                    document.getElementById('statsGrid').innerHTML =
-                        '<div class="error-state"><i class="ri-error-warning-line"></i> Aucune donnée disponible</div>';
+                    showError('Aucune donnée disponible');
                     return;
                 }
 
@@ -414,7 +345,10 @@
                 // Set UI state based on mode
                 document.getElementById('dateControlContainer').style.display = isWeek ? 'none' : 'inline-block';
                 document.getElementById('weekControlContainer').style.display = isWeek ? 'inline-block' : 'none';
-                document.querySelector('.charts-grid').style.display = isWeek ? 'grid' : 'none';
+                const chartsGrid = document.querySelector('.charts-grid');
+                if (chartsGrid) {
+                    chartsGrid.style.display = isWeek ? 'grid' : 'none';
+                }
 
                 // Initial Load
                 if (mode === 'month') {
@@ -427,8 +361,7 @@
 
             } catch (error) {
                 console.error('Error loading dates:', error);
-                document.getElementById('statsGrid').innerHTML =
-                    `<div class="error-state"><i class="ri-error-warning-line"></i> Connexion au serveur échouée (${error.message})</div>`;
+                showError(`Connexion au serveur échouée (${error.message})`);
             }
         }
 
@@ -545,16 +478,16 @@
             const chartsGrid = document.querySelector('.charts-grid');
 
             if (isYear) {
-                chartsGrid.style.display = 'grid';
+                if (chartsGrid) chartsGrid.style.display = 'grid';
                 loadSelectedYear();
             } else if (isMonth) {
-                chartsGrid.style.display = 'grid';
+                if (chartsGrid) chartsGrid.style.display = 'grid';
                 loadSelectedMonth();
             } else if (isWeek) {
-                chartsGrid.style.display = 'grid';
+                if (chartsGrid) chartsGrid.style.display = 'grid';
                 loadSelectedWeek();
             } else {
-                chartsGrid.style.display = 'none';
+                if (chartsGrid) chartsGrid.style.display = 'none';
                 loadSelectedDate();
             }
         }
@@ -624,8 +557,7 @@
                 applyFiltersAndSort();
             } catch (e) {
                 console.error("Error loading month", e);
-                document.getElementById('statsGrid').innerHTML =
-                    `<div class="error-state"><i class="ri-error-warning-line"></i> ${e.message || "Erreur lors du chargement du mois"}</div>`;
+                showError(e.message || "Erreur lors du chargement du mois");
             } finally {
                 setLoading(false);
             }
@@ -682,8 +614,7 @@
                 applyFiltersAndSort();
             } catch (e) {
                 console.error("Error loading year", e);
-                document.getElementById('statsGrid').innerHTML =
-                    `<div class="error-state"><i class="ri-error-warning-line"></i> ${e.message || "Erreur lors du chargement de l'année"}</div>`;
+                showError(e.message || "Erreur lors du chargement de l'année");
             } finally {
                 setLoading(false);
             }
@@ -797,8 +728,7 @@
                 applyFiltersAndSort();
             } catch (e) {
                 console.error("Error loading year", e);
-                document.getElementById('statsGrid').innerHTML =
-                    `<div class="error-state"><i class="ri-error-warning-line"></i> ${e.message || "Erreur lors du chargement de l'année"}</div>`;
+                showError(e.message || "Erreur lors du chargement de l'année");
             } finally {
                 setLoading(false);
             }
@@ -864,8 +794,7 @@
                 applyFiltersAndSort();
             } catch (e) {
                 console.error("Error loading week", e);
-                document.getElementById('statsGrid').innerHTML =
-                    `<div class="error-state"><i class="ri-error-warning-line"></i> ${e.message || "Erreur lors du chargement de la semaine"}</div>`;
+                showError(e.message || "Erreur lors du chargement de la semaine");
             } finally {
                 setLoading(false);
             }
@@ -1072,8 +1001,7 @@
 
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.getElementById('statsGrid').innerHTML =
-                    `<div class="error-state"><i class="ri-error-warning-line"></i> Erreur de chargement des données (${error.message})</div>`;
+                showError(`Erreur de chargement des données (${error.message})`);
             }
         }
 
@@ -1177,6 +1105,7 @@
 
         function renderStats(stats) {
             const grid = document.getElementById('statsGrid');
+            if (!grid) return;
 
             // Stats might be incomplete if constructed manually. Default to 0.
             const s = {
@@ -1218,11 +1147,6 @@
         }
 
         function applyFiltersAndSort() {
-            if (!document.getElementById('tableContent')) {
-                // If table is missing (Dashboard view), just render Top Zones chart and exit
-                if (typeof renderTopZonesChart === 'function') renderTopZonesChart();
-                return;
-            }
             const search = document.getElementById('searchZone').value.toLowerCase();
             const limit = document.getElementById('rowLimit').value;
 
@@ -1254,7 +1178,9 @@
             renderTable(filtered, limit);
 
             // Update Top Zones chart
-            renderTopZonesChart();
+            if (typeof renderTopZonesChart === 'function' && document.getElementById('chartTopZones')) {
+                renderTopZonesChart();
+            }
         }
 
         function sortTable(col) {
@@ -1269,7 +1195,6 @@
 
         function renderTable(data, limit = '30') {
             const tbody = document.getElementById('tableContent');
-            if (!tbody) return;
             if (data.length === 0) {
                 tbody.innerHTML = '<div class="error-state">Aucune donnée trouvée</div>';
                 document.getElementById('displayInfo').textContent = '';
@@ -1352,6 +1277,7 @@
         function populateZoneFilters() {
             [1, 2, 3].forEach(chartNum => {
                 const select = document.getElementById(`zoneFilter${chartNum}`);
+                if (!select) return;
                 const zonesHtml = allZones.map(zone =>
                     `<option value="${zone}">${zone}</option>`
                 ).join('');
@@ -1395,8 +1321,10 @@
         }
 
         function createChart1() {
-            const ctx = document.getElementById('chart1').getContext('2d');
-            const zoneFilter = document.getElementById('zoneFilter1').value;
+            const canvas = document.getElementById('chart1');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter1') ? document.getElementById('zoneFilter1').value : 'all';
             const { dates, data } = getChartData(zoneFilter);
             if (chart1) chart1.destroy();
             chart1 = new Chart(ctx, {
@@ -1413,8 +1341,10 @@
         }
 
         function createChart2() {
-            const ctx = document.getElementById('chart2').getContext('2d');
-            const zoneFilter = document.getElementById('zoneFilter2').value;
+            const canvas = document.getElementById('chart2');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter2') ? document.getElementById('zoneFilter2').value : 'all';
             const { dates, data } = getChartData(zoneFilter);
             if (chart2) chart2.destroy();
             chart2 = new Chart(ctx, {
@@ -1431,8 +1361,10 @@
         }
 
         function createChart3() {
-            const ctx = document.getElementById('chart3').getContext('2d');
-            const zoneFilter = document.getElementById('zoneFilter3').value;
+            const canvas = document.getElementById('chart3');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter3') ? document.getElementById('zoneFilter3').value : 'all';
             const { dates, data } = getChartData(zoneFilter);
             if (chart3) chart3.destroy();
             chart3 = new Chart(ctx, {
@@ -1449,6 +1381,7 @@
         }
 
         function updateChart(chartNum) {
+            if (!document.getElementById(`chart${chartNum}`)) return;
             switch (chartNum) {
                 case 1: createChart1(); break;
                 case 2: createChart2(); break;
