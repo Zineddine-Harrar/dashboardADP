@@ -1,12 +1,16 @@
 ﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { ChatLogService } from './chat-log.service';
+import { SqlAgentService } from './services/sql-agent.service';
+import { SpmService } from '../spm/spm.service';
 
 @Injectable()
 export class ChatbotService {
     constructor(
         private prisma: PrismaService,
         private chatLogService: ChatLogService,
+        private sqlAgent: SqlAgentService,
+        private spmService: SpmService,
     ) { }
 
     async chat(question: string, date?: string): Promise<{ response: string; logId: number }> {
@@ -14,7 +18,13 @@ export class ChatbotService {
         let logId: number;
 
         try {
+            if (this.requiresSpmAnalysis(question)) {
+                return await this.handleSpmQuery(question, startTime);
+            }
             // 1. R├®cup├®rer les donn├®es du dashboard
+            if (this.requiresSqlAgent(question)) {
+                return await this.handleSqlQuery(question, startTime);
+            }
             const context = await this.getContext(date, question);
 
             // 2. Construire le prompt pour Ollama
@@ -43,6 +53,200 @@ export class ChatbotService {
                 success: false,
                 errorMessage: error.message,
                 dateContext: date,
+            });
+
+            throw error;
+        }
+    }
+
+    private requiresSqlAgent(question: string): boolean {
+        const q = question.toLowerCase();
+        const keywords = [
+            'compare', 'comparaison', 'comparer',
+            'septembre et', 'juillet et', 'août et', 'octobre et', 'novembre et', 'décembre et',
+            'tendance', 'évolution',
+            'tous les mois', 'sur 6 mois',
+            'top ', 'classement', 'depuis juillet', 'depuis',
+            'durant le mois', 'pendant le mois', 'au mois de', 'mois de',
+            'en décembre', 'en novembre', 'en septembre', 'en juillet', 'en août', 'en octobre',
+            'le plus sollicité', 'les plus sollicité', 'les plus visité',
+            'plus de passagers', 'plus d\'occurrence', 'plus de maintenance'
+        ];
+        return keywords.some(kw => q.includes(kw));
+    }
+
+    private async handleSqlQuery(question: string, startTime: number): Promise<{ response: string; logId: number }> {
+        let logId: number;
+        try {
+            console.log('[CHATBOT] Using SQL Agent for:', question);
+            const sqlResult = await this.sqlAgent.queryDatabase(question);
+
+            if (!sqlResult.success) {
+                throw new Error(sqlResult.error || 'SQL query failed');
+            }
+
+            const prompt = `Tu es DALIA. Une requête SQL a été exécutée :
+
+SQL: ${sqlResult.sql}
+
+RÉSULTATS (${sqlResult.data?.length || 0} lignes):
+${JSON.stringify(sqlResult.data || [], (key, value) =>
+                typeof value === 'bigint' ? Number(value) : value
+                , 2)}
+
+INSTRUCTIONS DE FORMATAGE:
+1. Analyse les résultats SQL
+2. Réponds en français de manière claire et structurée
+3. Utilise des chiffres formatés avec espaces (ex: 9 034 367)
+4. Ajoute des comparaisons et pourcentages
+5. FORMATAGE: Utilise des retours à la ligne pour séparer les sections
+6. Évite l'excès de gras (**). Utilise-le uniquement pour les titres principaux
+7. Structure ta réponse avec des sauts de ligne entre chaque point important
+8. Présente les chiffres de manière aérée et lisible
+
+QUESTION: ${question}
+
+RÉPONSE:`;
+
+            const response = await this.callOpenAI(prompt);
+
+            logId = await this.chatLogService.logInteraction({
+                question,
+                response,
+                responseTimeMs: Date.now() - startTime,
+                success: true,
+            });
+
+            return { response, logId };
+        } catch (error) {
+            console.error('[CHATBOT] SQL Agent error:', error);
+            logId = await this.chatLogService.logInteraction({
+                question,
+                responseTimeMs: Date.now() - startTime,
+                success: false,
+                errorMessage: error.message,
+            });
+            throw error;
+        }
+    }
+
+    private requiresSpmAnalysis(question: string): boolean {
+        const q = question.toLowerCase();
+        const spmKeywords = [
+            'spm',
+            'note', 'notes',
+            'satisfaction',
+            'qualité', 'qualite',
+            'score',
+            'évaluation', 'evaluation'
+        ];
+        return spmKeywords.some(kw => q.includes(kw));
+    }
+
+    private async handleSpmQuery(question: string, startTime: number): Promise<{ response: string; logId: number }> {
+        let logId: number;
+
+        try {
+            console.log('[CHATBOT] Using SPM Service for:', question);
+
+            const spmData = await this.spmService.getSpmData('2025');
+
+            console.log('[SPM] Data retrieved:', spmData.items.length, 'zones');
+
+            // Vérifier si la question demande une corrélation avec les alertes/métriques
+            const needsCorrelation = question.toLowerCase().includes('corrélation') ||
+                question.toLowerCase().includes('correlation') ||
+                question.toLowerCase().includes('alerte') ||
+                question.toLowerCase().includes('compare');
+
+            let metricsData = null;
+            if (needsCorrelation) {
+                console.log('[SPM] Fetching all metrics data for correlation...');
+
+                // Récupérer TOUTES les métriques agrégées par mois depuis PostgreSQL
+                metricsData = await this.prisma.$queryRaw`
+                    SELECT 
+                        TO_CHAR("date", 'Mon-YY') as mois,
+                        SUM("alertWOs") as total_alertes,
+                        SUM("paxTotal") as total_passagers,
+                        SUM("occurrencesMaintenance") as total_occurrences_maintenance,
+                        SUM("occurrencesAdditionnelles") as total_occurrences_additionnelles,
+                        ROUND(SUM("dureeMaintenanceSeconds") / 3600.0, 1) as heures_maintenance,
+                        ROUND(SUM("dureeAdditionnelleSeconds") / 3600.0, 1) as heures_additionnelles,
+                        COUNT(DISTINCT "date") as jours_actifs,
+                        COUNT(DISTINCT "zoneId") as zones_actives
+                    FROM "daily_zone_cleaning_metrics"
+                    WHERE EXTRACT(YEAR FROM "date") = 2025
+                    GROUP BY TO_CHAR("date", 'Mon-YY'), EXTRACT(MONTH FROM "date")
+                    ORDER BY EXTRACT(MONTH FROM "date")
+                `;
+
+                console.log('[SPM] Metrics data retrieved:', (metricsData as any[]).length, 'months');
+            }
+
+            const prompt = needsCorrelation ? `Tu es DALIA, assistant analytique. Analyse la corrélation entre les notes SPM et les métriques opérationnelles pour l'année 2025 :
+
+DONNÉES SPM (notes de satisfaction par zone et par mois) :
+Mois disponibles : ${spmData.months.join(', ')}
+Zones : ${spmData.items.length}
+
+ÉCHANTILLON DONNÉES SPM :
+${JSON.stringify(spmData.items.slice(0, 5), null, 2)}
+
+DONNÉES MÉTRIQUES OPÉRATIONNELLES (agrégées par mois) :
+Alertes, Passagers, Occurrences, Heures de maintenance, etc.
+${JSON.stringify(metricsData, (key, value) => typeof value === 'bigint' ? Number(value) : value, 2)}
+
+INSTRUCTIONS:
+1. Analyse la corrélation entre les notes SPM et les métriques (alertes, passagers, maintenance, etc.)
+2. Identifie les mois où SPM est bas avec beaucoup d'alertes ou de maintenance
+3. Cherche des patterns : est-ce que plus de passagers = plus d'alertes = SPM plus bas ?
+4. Tire des conclusions sur la relation entre satisfaction et activité opérationnelle
+5. Réponds en français de manière structurée avec sauts de ligne
+6. Pour les chiffres, utilise 1 décimale
+
+QUESTION: ${question}
+
+RÉPONSE:` : `Tu es DALIA, assistant analytique. Analyse ces données SPM (notes de satisfaction par zone et par mois) :
+
+DONNÉES SPM DISPONIBLES :
+Mois : ${spmData.months.join(', ')}
+Nombre de zones : ${spmData.items.length}
+
+ÉCHANTILLON DES DONNÉES (par zone) :
+${JSON.stringify(spmData.items.slice(0, 10), null, 2)}
+
+INSTRUCTIONS DE FORMATAGE:
+1. Analyse les tendances SPM par mois
+2. Identifie les zones avec les meilleures/pires performances
+3. Réponds en français de manière claire et structurée
+4. Utilise des sauts de ligne pour séparer les sections
+5. Évite l'excès de gras (**). Utilise-le uniquement pour les titres principaux
+6. Pour les chiffres, utilise 1 décimale (ex: 7.2)
+
+QUESTION UTILISATEUR: ${question}
+
+RÉPONSE (en français):`;
+
+            const response = await this.callOpenAI(prompt);
+
+            logId = await this.chatLogService.logInteraction({
+                question,
+                response,
+                responseTimeMs: Date.now() - startTime,
+                success: true,
+            });
+
+            return { response, logId };
+
+        } catch (error) {
+            console.error('[CHATBOT] SPM query error:', error);
+
+            logId = await this.chatLogService.logInteraction({
+                question,
+                responseTimeMs: Date.now() - startTime,
+                success: false,
+                errorMessage: error.message,
             });
 
             throw error;
@@ -87,7 +291,7 @@ export class ChatbotService {
             select: { date: true },
             distinct: ['date'],
             orderBy: { date: 'desc' },
-            take: 31 // Maximum 31 jours
+            take: 200 // Support 6+ mois de données historiques (actuellement 137 jours)
         });
 
         // Si la question porte sur un mois, r├®cup├®rer les stats de toutes les dates du mois
@@ -374,43 +578,40 @@ export class ChatbotService {
 
     private async callOpenAI(prompt: string): Promise<string> {
         try {
-            const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
+            const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
             if (!OPENAI_API_KEY) {
-                throw new Error('OPENAI_API_KEY or OPENROUTER_API_KEY not configured in environment variables');
+                throw new Error('OPENAI_API_KEY not configured in environment variables');
             }
 
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                    'HTTP-Referer': 'http://localhost:3000',
-                    'X-Title': 'DATALIAN Chatbot',
                 },
                 body: JSON.stringify({
-                    model: 'xiaomi/mimo-v2-flash:free', // XIAOMI MiMo-V2-Flash (256K context, Claude-level performance)
+                    model: 'gpt-4o-mini', // Fast, cheap, excellent model
                     messages: [
                         {
                             role: 'user',
-                            content: prompt  // Le prompt contient d├®j├á TOUT (syst├¿me + donn├®es + question)
+                            content: prompt
                         }
                     ],
-                    temperature: 0.1,  // Plus bas = plus coh├®rent et pr├®visible
-                    max_tokens: 800,   // Plus de tokens pour r├®ponses compl├¿tes
-                    top_p: 0.9,
+                    temperature: 0.1,
+                    max_tokens: 800,
                 }),
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`OpenRouter returned ${response.status}: ${errorText}`);
+                throw new Error(`OpenAI returned ${response.status}: ${errorText}`);
             }
 
             const data = await response.json();
             return data.choices[0].message.content;
         } catch (error) {
-            console.error('[CHATBOT] Error calling OpenRouter:', error);
+            console.error('[CHATBOT] Error calling OpenAI:', error);
             throw new Error(`Impossible de contacter OpenAI: ${error.message}`);
         }
     }

@@ -6,6 +6,7 @@ import { MetricsModule } from './metrics/metrics.module';
 import { UploadController } from './api/upload.controller';
 import { AuthModule } from './auth/auth.module';
 import { SpmModule } from './spm/spm.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
 
 /**
  * Root application module
@@ -23,7 +24,8 @@ import { SpmModule } from './spm/spm.module';
         EtlModule,
         MetricsModule,
         AuthModule,
-        SpmModule
+        SpmModule,
+        ChatbotModule,
     ],
     controllers: [UploadController],
 })

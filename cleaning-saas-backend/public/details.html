@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons: Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+
+    <div class="layout">
+        <!-- Top Navigation -->
+        <header class="header">
+            <div class="brand">
+                <img src="img/atalian-LOGO.png" alt="Atalian Global Services">
+                <h1>DATALIAN KPI</h1>
+            </div>
+            <nav class="page-nav">
+                <a href="dashboard.html" class="page-nav-btn">
+                    <i class="ri-dashboard-3-line"></i>
+                    <span>Vue d'ensemble</span>
+                </a>
+                <a href="details.html" class="page-nav-btn active">
+                    <i class="ri-table-line"></i>
+                    <span>Détails</span>
+                </a>
+            </nav>
+            <div class="controls">
+                <!-- Theme Toggle -->
+                <button class="btn" onclick="toggleTheme()" title="Mode Nuit">
+                    <i id="themeIcon" class="ri-moon-line"></i>
+                </button>
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+
+                <div class="view-mode-switch">
+                    <label>
+                        <input type="radio" name="viewMode" value="day" checked onchange="switchViewMode()">
+                        Jour
+                    </label>
+                    <label>
+                        <input type="radio" name="viewMode" value="week" onchange="switchViewMode()">
+                        Semaine
+                    </label>
+                    <label>
+                        <input type="radio" name="viewMode" value="month" onchange="switchViewMode()">
+                        Mois
+                    </label>
+                    <label>
+                        <input type="radio" name="viewMode" value="year" onchange="switchViewMode()">
+                        Année
+                    </label>
+                </div>
+
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+
+                <button class="btn" onclick="navigate(-1)">
+                    <i class="ri-arrow-left-s-line"></i>
+                </button>
+
+                <div id="dateControlContainer" style="display:inline-block;">
+                    <select id="dateSelector" onchange="loadSelectedDate()"></select>
+                </div>
+
+                <div id="weekControlContainer" style="display:none;">
+                    <select id="weekSelector" onchange="loadSelectedWeek()"></select>
+                </div>
+
+                <div id="monthControlContainer" style="display:none;">
+                    <select id="monthSelector" onchange="loadSelectedMonth()"></select>
+                </div>
+
+                <div id="yearControlContainer" style="display:none;">
+                    <select id="yearSelector" onchange="loadSelectedYear()"></select>
+                </div>
+
+                <button class="btn" onclick="navigate(1)">
+                    <i class="ri-arrow-right-s-line"></i>
+                </button>
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+                <button id="importButton" class="btn btn-primary" onclick="window.location.href='upload.html'"
+                    style="display: none;">
+                    <i class="ri-upload-cloud-line"></i>
+                    <span>Importer</span>
+                </button>
+                <div style="width: 1px; height: 24px; background: var(--border); margin: 0 0.5rem;"></div>
+                <button class="btn" onclick="logout()" title="Déconnexion">
+                    <i class="ri-logout-box-r-line"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Loading Overlay (Persistent) -->
+        <div id="globalLoading" class="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <span>Chargement des données...</span>
+        </div>
+
+
+        <!-- Data Table -->
+        <div class="card animate-enter" style="animation-delay: 300ms">
+            <div class="card-header">
+                <h2 class="card-title">Détail des Zones</h2>
+            </div>
+            <div class="table-controls">
+                <div class="search-input">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="searchZone" placeholder="Rechercher une zone..."
+                        oninput="applyFiltersAndSort()">
+                </div>
+                <div style="flex: 1;"></div>
+                <select id="rowLimit" onchange="applyFiltersAndSort()" style="width: auto;">
+                    <option value="10">10 lignes</option>
+                    <option value="30" selected>30 lignes</option>
+                    <option value="50">50 lignes</option>
+                    <option value="all">Tout afficher</option>
+                </select>
+            </div>
+
+            <div class="table-container" style="overflow-x: auto;">
+                <div id="tableContent">
+                    <div class="loading-state">Chargement du tableau...</div>
+                </div>
+                <div id="displayInfo"
+                    style="padding: 1rem 1.5rem; color: var(--text-muted); font-size: 0.875rem; text-align: right;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Fullscreen Chart Modal -->
+        <div id="chartModal" class="chart-modal" onclick="closeChartModal(event)">
+            <div class="chart-modal-content">
+                <div class="chart-modal-header">
+                    <h2 id="modalChartTitle">Graphique</h2>
+                    <button class="btn btn-icon" onclick="closeChartModal(event)" title="Fermer">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="chart-modal-body">
+                    <canvas id="modalChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Widget -->
+
+
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Atalian Global Services &bull; Dashboard Analytics</p>
+    </footer>
+    </div>
+
+    <script>
+        // Détection automatique de l'URL API
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : window.location.origin;
+
+        // Auth Check
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!token || !user) {
+            window.location.href = 'login.html';
+        }
+
+        // Apply Role Restrictions
+        document.addEventListener('DOMContentLoaded', () => {
+            if (user && user.role === 'ADMIN') {
+                const importBtn = document.getElementById('importButton');
+                if (importBtn) importBtn.style.display = 'flex';
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Fetch Wrapper with Token
+        async function fetchWithAuth(url, options = {}) {
+            const headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+            const response = await fetch(url, { ...options, headers });
+            if (response.status === 401) {
+                logout();
+                return;
+            }
+            return response;
+        }
+
+        // Theme Logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+            updateChartTheme(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.className = 'ri-sun-line';
+            } else {
+                icon.className = 'ri-moon-line';
+            }
+        }
+
+        function updateChartTheme(theme) {
+            const isDark = theme === 'dark';
+            Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+            [chart1, chart2, chart3, topZonesChart].forEach(chart => {
+                if (chart && chart.options.scales.y) {
+                    chart.options.scales.y.grid.color = isDark ? '#334155' : '#f1f5f9';
+                    if (chart.options.scales.x) {
+                        chart.options.scales.x.grid.color = isDark ? '#334155' : 'rgba(241, 245, 249, 0.5)';
+                    }
+                    chart.update();
+                }
+            });
+        }
+
+        // Init Theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.addEventListener('DOMContentLoaded', () => updateThemeIcon(savedTheme));
+
+        // Professional Icon Mapping (RemixIcon)
+        const getZoneIcon = (index) => {
+            const icons = [
+                'ri-building-4-line',
+                'ri-community-line',
+                'ri-store-2-line',
+                'ri-hotel-line',
+                'ri-building-2-line',
+                'ri-government-line'
+            ];
+            return icons[index % icons.length];
+        };
+
+        let availableDates = [];
+        let currentDateIndex = 0;
+
+        // Week View Vars
+        let weeks = [];
+        let currentWeekIndex = 0;
+
+        // Month View Vars
+        let months = [];
+        let currentMonthIndex = 0;
+
+        // Year View Vars
+        let years = [];
+        let currentYearIndex = 0;
+
+        let currentChartMetrics = {}; // Map: date -> metrics[] for charts scope
+        let currentChartDates = [];
+
+        let chart1 = null;
+        let chart2 = null;
+        let chart3 = null;
+        let topZonesChart = null;
+
+        let allMetrics = [];
+        let allZones = [];
+        let allMetricsByDate = {}; // Legacy global, kept if needed but scoped logic preferred
+        let sortColumn = null;
+        let sortDirection = 'asc';
+
+        // Chatbot History
+        let chatHistory = [];
+
+        function setLoading(isVisible) {
+            const el = document.getElementById('globalLoading');
+            if (el) el.style.display = isVisible ? 'flex' : 'none';
+        }
+
+        function showError(message) {
+            const grid = document.getElementById('statsGrid');
+            if (grid) {
+                grid.innerHTML = `<div class="error-state"><i class="ri-error-warning-line"></i> ${message}</div>`;
+            }
+            const table = document.getElementById('tableContent');
+            if (table) {
+                table.innerHTML = `<div class="error-state"><i class="ri-error-warning-line"></i> ${message}</div>`;
+            }
+        }
+
+        // Initialize
+        async function loadAvailableDates() {
+            try {
+                const response = await fetchWithAuth(`${API_URL}/metrics/dates/available`);
+                if (!response.ok) throw new Error(`Status: ${response.status}`);
+                const data = await response.json();
+                availableDates = data.dates || [];
+
+                if (availableDates.length === 0) {
+                    showError('Aucune donnée disponible');
+                    return;
+                }
+
+                // Populate Date Selector
+                const selector = document.getElementById('dateSelector');
+                selector.innerHTML = availableDates.map((date, index) => {
+                    const dateObj = new Date(date);
+                    const formatted = dateObj.toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    });
+                    return `<option value="${index}">${formatted}</option>`;
+                }).join('');
+
+                currentDateIndex = 0;
+
+                // Init Weeks (populates week selector)
+                initWeeks();
+
+                // Init Months (populates month selector)
+                initMonths();
+
+                // Init Years (populates year selector)
+                initYears();
+
+                // Select Day Mode by Default (checked in HTML)
+                // We call switchViewMode but we DON'T let it trigger loading during init
+                // We will handle the initial load explicitly below.
+                const mode = document.querySelector('input[name="viewMode"]:checked').value;
+                const isWeek = mode === 'week';
+
+                // Set UI state based on mode
+                document.getElementById('dateControlContainer').style.display = isWeek ? 'none' : 'inline-block';
+                document.getElementById('weekControlContainer').style.display = isWeek ? 'inline-block' : 'none';
+                const chartsGrid = document.querySelector('.charts-grid');
+                if (chartsGrid) {
+                    chartsGrid.style.display = isWeek ? 'grid' : 'none';
+                }
+
+                // Initial Load
+                if (mode === 'month') {
+                    await loadSelectedMonth();
+                } else if (mode === 'week') {
+                    await loadSelectedWeek();
+                } else {
+                    await loadSelectedDate();
+                }
+
+            } catch (error) {
+                console.error('Error loading dates:', error);
+                showError(`Connexion au serveur échouée (${error.message})`);
+            }
+        }
+
+        function initWeeks() {
+            const weekMap = new Map();
+            availableDates.forEach(dateStr => {
+                const d = new Date(dateStr);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day == 0 ? -6 : 1); // Monday
+                const monday = new Date(d);
+                monday.setDate(diff);
+                const key = monday.toISOString().split('T')[0];
+
+                if (!weekMap.has(key)) weekMap.set(key, []);
+                weekMap.get(key).push(dateStr);
+            });
+
+            weeks = Array.from(weekMap.entries())
+                .sort((a, b) => a[0].localeCompare(b[0])) // Ascending Date
+                .reverse() // Newest first for selector? User usually wants recent. Let's keep DESC like dates.
+                .map(([monday, dates]) => {
+                    const d = new Date(monday);
+                    const label = `Semaine du ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+                    return { label, dates, mondayKey: monday };
+                });
+
+            const sel = document.getElementById('weekSelector');
+            sel.innerHTML = weeks.map((w, i) => `<option value="${i}">${w.label}</option>`).join('');
+            currentWeekIndex = 0;
+        }
+
+        function initMonths() {
+            const monthMap = new Map();
+            availableDates.forEach(dateStr => {
+                const d = new Date(dateStr);
+                const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                if (!monthMap.has(key)) monthMap.set(key, []);
+                monthMap.get(key).push(dateStr);
+            });
+
+            months = Array.from(monthMap.entries())
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .reverse()
+                .map(([key, dates]) => {
+                    const [year, month] = key.split('-');
+                    const dateObj = new Date(year, month - 1);
+                    const label = dateObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                    // Capitalize first letter
+                    const capitalized = label.charAt(0).toUpperCase() + label.slice(1);
+                    return { label: capitalized, dates, monthKey: key };
+                });
+
+            const sel = document.getElementById('monthSelector');
+            sel.innerHTML = months.map((m, i) => `<option value="${i}">${m.label}</option>`).join('');
+            currentMonthIndex = 0;
+        }
+
+        function initYears() {
+            const yearMap = new Map();
+            availableDates.forEach(dateStr => {
+                const d = new Date(dateStr);
+                const year = d.getFullYear();
+                if (!yearMap.has(year)) yearMap.set(year, []);
+                yearMap.get(year).push(dateStr);
+            });
+
+            years = Array.from(yearMap.entries())
+                .sort((a, b) => b[0] - a[0]) // DESC: newest year first
+                .map(([year, dates]) => {
+                    // Group dates by month within the year
+                    const monthsInYear = new Map();
+                    dates.forEach(dateStr => {
+                        const d = new Date(dateStr);
+                        const monthKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                        if (!monthsInYear.has(monthKey)) monthsInYear.set(monthKey, []);
+                        monthsInYear.get(monthKey).push(dateStr);
+                    });
+
+                    const monthsArray = Array.from(monthsInYear.entries())
+                        .sort((a, b) => a[0].localeCompare(b[0]))
+                        .map(([key, dates]) => {
+                            const [y, m] = key.split('-');
+                            const dateObj = new Date(y, m - 1);
+                            const label = dateObj.toLocaleDateString('fr-FR', { month: 'short' });
+                            return { label: label.charAt(0).toUpperCase() + label.slice(1), dates };
+                        });
+
+                    return {
+                        label: year.toString(),
+                        year: year,
+                        dates: dates.sort(),
+                        months: monthsArray
+                    };
+                });
+
+            const sel = document.getElementById('yearSelector');
+            sel.innerHTML = years.map((y, i) => `<option value="${i}">${y.label}</option>`).join('');
+            currentYearIndex = 0;
+        }
+
+        function switchViewMode() {
+            const mode = document.querySelector('input[name="viewMode"]:checked').value;
+            const isWeek = mode === 'week';
+            const isMonth = mode === 'month';
+            const isYear = mode === 'year';
+
+            // Toggle Controls
+            document.getElementById('dateControlContainer').style.display = (mode === 'day') ? 'inline-block' : 'none';
+            document.getElementById('weekControlContainer').style.display = isWeek ? 'inline-block' : 'none';
+            document.getElementById('monthControlContainer').style.display = isMonth ? 'inline-block' : 'none';
+            document.getElementById('yearControlContainer').style.display = isYear ? 'inline-block' : 'none';
+
+            // Toggle Logic
+            const chartsGrid = document.querySelector('.charts-grid');
+
+            if (isYear) {
+                if (chartsGrid) chartsGrid.style.display = 'grid';
+                loadSelectedYear();
+            } else if (isMonth) {
+                if (chartsGrid) chartsGrid.style.display = 'grid';
+                loadSelectedMonth();
+            } else if (isWeek) {
+                if (chartsGrid) chartsGrid.style.display = 'grid';
+                loadSelectedWeek();
+            } else {
+                if (chartsGrid) chartsGrid.style.display = 'none';
+                loadSelectedDate();
+            }
+        }
+
+        function navigate(direction) {
+            const mode = document.querySelector('input[name="viewMode"]:checked').value;
+            if (mode === 'month') {
+                const nextIndex = currentMonthIndex - direction;
+                if (nextIndex >= 0 && nextIndex < months.length) {
+                    currentMonthIndex = nextIndex;
+                    document.getElementById('monthSelector').value = currentMonthIndex;
+                    loadSelectedMonth();
+                }
+            } else if (mode === 'week') {
+                const nextIndex = currentWeekIndex - direction; // Invert direction for intuitive 
+                if (nextIndex >= 0 && nextIndex < weeks.length) {
+                    currentWeekIndex = nextIndex;
+                    document.getElementById('weekSelector').value = currentWeekIndex;
+                    loadSelectedWeek();
+                }
+            } else {
+                // Day Mode
+                const nextIndex = currentDateIndex - direction;
+                if (nextIndex >= 0 && nextIndex < availableDates.length) {
+                    currentDateIndex = nextIndex;
+                    document.getElementById('dateSelector').value = currentDateIndex;
+                    loadSelectedDate();
+                }
+            }
+        }
+
+        async function loadSelectedMonth() {
+            const index = parseInt(document.getElementById('monthSelector').value);
+            currentMonthIndex = index;
+            const month = months[index];
+            if (!month) return;
+
+            setLoading(true);
+            try {
+                const promises = month.dates.map(date =>
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                );
+
+                const metricsWrappers = await Promise.all(promises);
+                const dailyMetricsArrays = metricsWrappers
+                    .filter(w => w && w.data && Array.isArray(w.data))
+                    .map(w => w.data);
+
+                if (dailyMetricsArrays.length === 0) {
+                    throw new Error("Aucune donnée disponible pour ce mois.");
+                }
+
+                allMetrics = aggregateWeekData(dailyMetricsArrays);
+                allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
+                populateZoneFilters();
+
+                const monthStats = calculateWeekStats(allMetrics);
+                renderStats(monthStats);
+
+                const monthMetricsMap = {};
+                month.dates.forEach((d, i) => {
+                    if (metricsWrappers[i] && metricsWrappers[i].data) {
+                        monthMetricsMap[d] = metricsWrappers[i].data;
+                    }
+                });
+                renderChartsForWeek(month.dates, monthMetricsMap);
+                applyFiltersAndSort();
+            } catch (e) {
+                console.error("Error loading month", e);
+                showError(e.message || "Erreur lors du chargement du mois");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // YEAR VIEW
+        async function loadSelectedYear() {
+            const index = parseInt(document.getElementById('yearSelector').value);
+            currentYearIndex = index;
+            const year = years[index];
+            if (!year) return;
+
+            setLoading(true);
+            try {
+                const promises = year.dates.map(date =>
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                );
+
+                const metricsWrappers = await Promise.all(promises);
+                const dailyMetricsArrays = metricsWrappers
+                    .filter(w => w && w.data && Array.isArray(w.data))
+                    .map(w => w.data);
+
+                if (dailyMetricsArrays.length === 0) {
+                    throw new Error("Aucune donnée disponible pour cette année.");
+                }
+
+                allMetrics = aggregateWeekData(dailyMetricsArrays);
+                allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
+                populateZoneFilters();
+
+                const yearStats = calculateWeekStats(allMetrics);
+                renderStats(yearStats);
+
+                const monthlyMetricsMap = {};
+                year.months.forEach(monthData => {
+                    const monthDates = monthData.dates;
+                    const monthMetrics = [];
+
+                    monthDates.forEach(date => {
+                        const idx = year.dates.indexOf(date);
+                        if (idx !== -1 && metricsWrappers[idx] && metricsWrappers[idx].data) {
+                            monthMetrics.push(...metricsWrappers[idx].data);
+                        }
+                    });
+
+                    if (monthMetrics.length > 0) {
+                        monthlyMetricsMap[monthData.label] = monthMetrics;
+                    }
+                });
+
+                const monthLabels = year.months.map(m => m.label);
+                renderChartsForYear(monthLabels, monthlyMetricsMap);
+                applyFiltersAndSort();
+            } catch (e) {
+                console.error("Error loading year", e);
+                showError(e.message || "Erreur lors du chargement de l'année");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function renderChartsForYear(monthLabels, monthlyMetricsMap) {
+            currentChartDates = monthLabels;
+            currentChartMetrics = monthlyMetricsMap;
+
+            for (let i = 1; i <= 4; i++) {
+                updateChart(i);
+            }
+        }
+
+        // NEW PICKER FUNCTIONS
+        function loadDateFromPicker() {
+            const picker = document.getElementById('datePicker');
+            const selectedDate = picker.value;
+            if (selectedDate) {
+                setLoading(true);
+                loadDate(selectedDate).finally(() => setLoading(false));
+            }
+        }
+
+        function loadWeekFromPicker() {
+            const picker = document.getElementById('weekPicker');
+            const weekValue = picker.value; // Format: YYYY-Www
+            if (!weekValue) return;
+
+            const [year, weekNum] = weekValue.split('-W');
+            const weekNumber = parseInt(weekNum);
+
+            // Find matching week
+            const matchingWeek = weeks.find(w => {
+                const weekDate = new Date(w.mondayKey);
+                const weekYear = weekDate.getFullYear();
+                const weekOfYear = getWeekNumber(weekDate);
+                return weekYear === parseInt(year) && weekOfYear === weekNumber;
+            });
+
+            if (matchingWeek) {
+                currentWeekIndex = weeks.indexOf(matchingWeek);
+                loadSelectedWeek();
+            }
+        }
+
+        function loadMonthFromPicker() {
+            const picker = document.getElementById('monthPicker');
+            const monthValue = picker.value; // Format: YYYY-MM
+            if (!monthValue) return;
+
+            const matchingMonth = months.find(m => m.monthKey === monthValue);
+            if (matchingMonth) {
+                currentMonthIndex = months.indexOf(matchingMonth);
+                loadSelectedMonth();
+            }
+        }
+
+        async function loadYearFromPicker() {
+            const picker = document.getElementById('yearPicker');
+            const yearValue = parseInt(picker.value);
+            if (!yearValue) return;
+
+            const matchingYear = years.find(y => y.year === yearValue);
+            if (!matchingYear) return;
+
+            currentYearIndex = years.indexOf(matchingYear);
+            const year = matchingYear;
+
+            setLoading(true);
+            try {
+                const promises = year.dates.map(date =>
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                );
+
+                const metricsWrappers = await Promise.all(promises);
+                const dailyMetricsArrays = metricsWrappers
+                    .filter(w => w && w.data && Array.isArray(w.data))
+                    .map(w => w.data);
+
+                if (dailyMetricsArrays.length === 0) {
+                    throw new Error("Aucune donnée disponible pour cette année.");
+                }
+
+                allMetrics = aggregateWeekData(dailyMetricsArrays);
+                allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
+                populateZoneFilters();
+
+                const yearStats = calculateWeekStats(allMetrics);
+                renderStats(yearStats);
+
+                const monthlyMetricsMap = {};
+                year.months.forEach(monthData => {
+                    const monthDates = monthData.dates;
+                    const monthMetrics = [];
+
+                    monthDates.forEach(date => {
+                        const idx = year.dates.indexOf(date);
+                        if (idx !== -1 && metricsWrappers[idx] && metricsWrappers[idx].data) {
+                            monthMetrics.push(...metricsWrappers[idx].data);
+                        }
+                    });
+
+                    if (monthMetrics.length > 0) {
+                        monthlyMetricsMap[monthData.label] = monthMetrics;
+                    }
+                });
+
+                const monthLabels = year.months.map(m => m.label);
+                renderChartsForYear(monthLabels, monthlyMetricsMap);
+                applyFiltersAndSort();
+            } catch (e) {
+                console.error("Error loading year", e);
+                showError(e.message || "Erreur lors du chargement de l'année");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        async function loadSelectedDate() {
+            const index = parseInt(document.getElementById('dateSelector').value);
+            currentDateIndex = index;
+            const date = availableDates[index];
+            if (!date) return;
+
+            setLoading(true);
+            try {
+                await loadDate(date);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function loadSelectedWeek() {
+            const index = parseInt(document.getElementById('weekSelector').value);
+            currentWeekIndex = index;
+            const week = weeks[index];
+            if (!week) return;
+
+            setLoading(true);
+            try {
+                const promises = week.dates.map(date =>
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`).then(r => r.json())
+                );
+
+                const metricsWrappers = await Promise.all(promises);
+                const dailyMetricsArrays = metricsWrappers
+                    .filter(w => w && w.data && Array.isArray(w.data))
+                    .map(w => w.data);
+
+                if (dailyMetricsArrays.length === 0) {
+                    throw new Error("Aucune donnée disponible pour cette semaine.");
+                }
+
+                allMetrics = aggregateWeekData(dailyMetricsArrays);
+                allZones = [...new Set(allMetrics.map(m => m.zoneName))].sort();
+                populateZoneFilters();
+
+                const weekStats = calculateWeekStats(allMetrics);
+                renderStats(weekStats);
+
+                const weekMetricsMap = {};
+                week.dates.forEach((d, i) => {
+                    if (metricsWrappers[i] && metricsWrappers[i].data) {
+                        weekMetricsMap[d] = metricsWrappers[i].data;
+                    }
+                });
+                renderChartsForWeek(week.dates, weekMetricsMap);
+                applyFiltersAndSort();
+            } catch (e) {
+                console.error("Error loading week", e);
+                showError(e.message || "Erreur lors du chargement de la semaine");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function aggregateWeekData(dailyArrays) {
+            // FIRST: Collect unique daily totals (one per day) BEFORE zone aggregation
+            const dailyTotals = [];
+            for (const dayMetrics of dailyArrays) {
+                if (dayMetrics && dayMetrics.length > 0 && dayMetrics[0].dailyTotalPax !== undefined) {
+                    dailyTotals.push(dayMetrics[0].dailyTotalPax);
+                }
+            }
+
+            // Flatten first to get all occurrences
+            const flat = dailyArrays.flat();
+            const zoneMap = {};
+
+            flat.forEach(m => {
+                if (!zoneMap[m.zoneName]) {
+                    zoneMap[m.zoneName] = { ...m };
+                    // Reset accumulators
+                    zoneMap[m.zoneName].nbVisits = 0;
+                    zoneMap[m.zoneName].minVisits = 0;
+                    zoneMap[m.zoneName].dureeMaintenanceSeconds = 0;
+                    zoneMap[m.zoneName].dureeAdditionnelleSeconds = 0;
+                    zoneMap[m.zoneName].dureeAlertesSeconds = 0;
+                    zoneMap[m.zoneName].dureeSpecificSeconds = 0;
+                    zoneMap[m.zoneName].paxTotal = 0;
+                    zoneMap[m.zoneName].maxVisits = 0;
+                    zoneMap[m.zoneName].occurrencesMaintenance = 0;
+                    zoneMap[m.zoneName].occurrencesAdditionnelles = 0;
+                    zoneMap[m.zoneName].alertWOs = 0;
+                    zoneMap[m.zoneName].daysCount = 0;
+                }
+
+                const Z = zoneMap[m.zoneName];
+                const realVisits = (m.occurrencesMaintenance || 0) + (m.occurrencesAdditionnelles || 0) + (m.alertWOs || 0);
+                Z.nbVisits += realVisits;
+                Z.daysCount++;
+
+                Z.dureeMaintenanceSeconds += (m.dureeMaintenanceSeconds || 0);
+                Z.dureeAdditionnelleSeconds += (m.dureeAdditionnelleSeconds || 0);
+                Z.dureeAlertesSeconds += (m.dureeAlertesSeconds || 0);
+                Z.dureeSpecificSeconds += (m.dureeSpecificSeconds || 0);
+                Z.paxTotal += (m.paxTotal || 0);
+                Z.maxVisits += (m.maxVisits || 0);
+                Z.minVisits += (m.minVisits || 0);
+                Z.occurrencesMaintenance += (m.occurrencesMaintenance || 0);
+                Z.occurrencesAdditionnelles += (m.occurrencesAdditionnelles || 0);
+                Z.alertWOs += (m.alertWOs || 0);
+            });
+
+            const aggregatedZones = Object.values(zoneMap).map(Z => {
+                // Durations are SUMMED.
+                // Avg Duration (calculated column) will be handled by renderTable using these Sums / Occurrences.
+                return Z;
+            });
+
+            // Attach the collected daily totals so calculateWeekStats can access them
+            aggregatedZones._weeklyDailyTotals = dailyTotals;
+
+            return aggregatedZones;
+        }
+
+        // Helper: Calculate the sum of unique daily totals from metrics that contain dailyTotalPax
+        function sumUniqueDailyTotals(metricsList) {
+            const dailyMap = {};
+
+            for (const m of metricsList) {
+                const d = m.date;
+                if (!d) continue;
+                const dStr = typeof d === 'string' ? d.split('T')[0] : d.toISOString().split('T')[0];
+
+                // Use dailyTotalPax if available (unique per day), otherwise skip duplicates
+                if (m.dailyTotalPax !== undefined && m.dailyTotalPax !== null && m.dailyTotalPax > 0) {
+                    // Store the unique daily total for this date
+                    dailyMap[dStr] = m.dailyTotalPax;
+                } else if (!dailyMap[dStr]) {
+                    // If no dailyTotalPax, use paxTotal but only ONCE per day
+                    dailyMap[dStr] = (m.paxTotal || 0);
+                }
+            }
+
+            // Sum the unique daily values (one value per day, not per zone)
+            return Object.values(dailyMap).reduce((sum, val) => sum + val, 0);
+        }
+
+
+        function calculateWeekStats(aggregatedMetrics) {
+            // Use the pre-collected daily totals (collected BEFORE zone aggregation)
+            // These are the unique dailyTotalPax values, one per day
+            let totalPax = 0;
+            if (aggregatedMetrics._weeklyDailyTotals && aggregatedMetrics._weeklyDailyTotals.length > 0) {
+                // Sum the unique daily totals
+                totalPax = aggregatedMetrics._weeklyDailyTotals.reduce((sum, val) => sum + val, 0);
+            } else {
+                // Fallback: if no daily totals were collected, sum paxTotal from zones
+                // This should rarely happen
+                totalPax = aggregatedMetrics.reduce((s, m) => s + (m.paxTotal || 0), 0);
+            }
+
+            return {
+                totalPax: totalPax,
+                totalAlerts: aggregatedMetrics.reduce((s, m) => s + (m.alertWOs || 0), 0),
+                totalMaintenanceHours: aggregatedMetrics.reduce((s, m) => s + (m.dureeMaintenanceSeconds || 0) / 3600, 0),
+                totalZones: aggregatedMetrics.length,
+                totalOccurrencesMaintenance: aggregatedMetrics.reduce((s, m) => s + (m.occurrencesMaintenance || 0), 0),
+                totalOccurrencesAdditionnelles: aggregatedMetrics.reduce((s, m) => s + (m.occurrencesAdditionnelles || 0), 0),
+                totalAdditionnelleHours: aggregatedMetrics.reduce((s, m) => s + (m.dureeAdditionnelleSeconds || 0) / 3600, 0)
+            };
+        }
+
+        function renderChartsForWeek(dates, metricsMap) {
+            // Inject specific data scope for getChartData
+            currentChartMetrics = metricsMap;
+            currentChartDates = dates.sort(); // Ensure sorted 
+
+            createChart1();
+            createChart2();
+            createChart3();
+        }
+
+
+        // MODIFIED getChartData to use Scope
+        function getChartData(zoneFilter) {
+            const dates = currentChartDates; // already sorted
+            // Check if we're in year mode (labels are month names, not ISO dates)
+            const isYearMode = dates.length > 0 && !dates[0].match(/^\d{4}-\d{2}-\d{2}$/);
+
+            // Format dates for labels
+            const labels = isYearMode
+                ? dates // Already formatted month names (Jan, Fév, etc.)
+                : dates.map(d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
+
+            const dataSeries = dates.map(date => {
+                const metrics = currentChartMetrics[date] || [];
+                if (zoneFilter === 'all') {
+                    // Use helper to sum unique daily totals if month/year (multiple days in metrics)
+                    const dailyTotal = sumUniqueDailyTotals(metrics);
+                    return {
+                        totalPax: dailyTotal,
+                        totalMaintenanceHours: metrics.reduce((sum, m) => sum + ((m.dureeMaintenanceSeconds || 0) / 3600), 0),
+                        totalAdditionnelleHours: metrics.reduce((sum, m) => sum + ((m.dureeAdditionnelleSeconds || 0) / 3600), 0),
+                        totalAlerts: metrics.reduce((sum, m) => sum + (m.alertWOs || 0), 0)
+                    };
+                } else {
+                    const m = metrics.find(z => z.zoneName === zoneFilter) || {};
+                    return {
+                        totalPax: m.paxTotal || 0,  // Keep per-zone paxTotal for zone-specific view
+                        totalMaintenanceHours: (m.dureeMaintenanceSeconds || 0) / 3600,
+                        totalAdditionnelleHours: (m.dureeAdditionnelleSeconds || 0) / 3600,
+                        totalAlerts: m.alertWOs || 0
+                    };
+                }
+            });
+
+            return { dates: labels, data: dataSeries };
+        }
+
+        async function loadDate(date) {
+            try {
+                const [statsRes, metricsRes] = await Promise.all([
+                    fetchWithAuth(`${API_URL}/metrics/stats/summary?date=${date}`),
+                    fetchWithAuth(`${API_URL}/metrics?date=${date}`)
+                ]);
+
+                const stats = await statsRes.json();
+                const metricsData = await metricsRes.json();
+
+                // Filtering Logic
+                allMetrics = metricsData.data.filter(m => {
+                    const name = m.zoneName.toLowerCase();
+                    const realVisits = (m.occurrencesMaintenance || 0) + (m.occurrencesAdditionnelles || 0) + (m.alertWOs || 0);
+                    const plannedVisits = m.minVisits || 0;
+
+                    // 1. Exclude specific unwanted zones
+                    if (name.includes('salle de pause') ||
+                        name.includes('local atalian') ||
+                        name.includes('handicapés') ||
+                        name.includes('handicapes') ||
+                        name.includes('linéaire') ||
+                        name.includes('lineaire')) { // Handle potential accent variations
+                        return false;
+                    }
+
+                    // 2. Exclude inactive zones (0 planned AND 0 real)
+                    if (plannedVisits === 0 && realVisits === 0) {
+                        return false;
+                    }
+
+                    // Attach realVisits as nbVisits for the chart and table sorting
+                    m.nbVisits = realVisits;
+
+                    return true;
+                });
+
+                renderStats(stats);
+
+                // For Charts in Day Mode: We need to scope them to this specific date if charts are shown
+                // However, user wants charts hidden in Day Mode. 
+                // But we update currentChartDates/Metrics anyway so they are ready if user switches mode.
+                currentChartDates = [date];
+                currentChartMetrics = { [date]: metricsData.data };
+
+                applyFiltersAndSort();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError(`Erreur de chargement des données (${error.message})`);
+            }
+        }
+
+        // Animation Helper: Count Up
+        function animateValue(obj, start, end, duration, isFloat = false, suffix = '') {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easedProgress = 1 - Math.pow(1 - progress, 4);
+                const currentVal = progress * (end - start) + start;
+
+                if (isFloat) {
+                    obj.innerHTML = currentVal.toLocaleString('fr-FR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }) + suffix;
+                } else {
+                    obj.innerHTML = Math.floor(currentVal).toLocaleString('fr-FR') + suffix;
+                }
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    if (isFloat) {
+                        obj.innerHTML = end.toLocaleString('fr-FR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }) + suffix;
+                    } else {
+                        obj.innerHTML = end.toLocaleString('fr-FR') + suffix;
+                    }
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function renderTopZonesChart() {
+            const limit = document.getElementById('topZonesLimit').value;
+            const ctx = document.getElementById('chartTopZones').getContext('2d');
+            const container = document.getElementById('topZonesContainer');
+
+            // Data Preparation: Ensure nbVisits is used (sorting handled by nbVisits)
+            const sortedData = [...allMetrics].sort((a, b) => (b.nbVisits || 0) - (a.nbVisits || 0));
+            const displayData = limit === 'all' ? sortedData : sortedData.slice(0, parseInt(limit));
+
+            // Dynamic Height: ~35px per bar, min 350px
+            const calcHeight = Math.max(350, displayData.length * 35);
+            container.style.height = calcHeight + 'px';
+
+            const labels = displayData.map(m => m.zoneName);
+            const values = displayData.map(m => m.nbVisits || 0);
+
+            if (topZonesChart) {
+                topZonesChart.destroy();
+            }
+
+            topZonesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Nombre de Visites',
+                        data: values,
+                        backgroundColor: '#6366f1',
+                        borderRadius: 6,
+                        barThickness: 15
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `Visites: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(241, 245, 249, 0.5)' },
+                            ticks: { font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 11, weight: '500' },
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim() || '#1e293b'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStats(stats) {
+            const grid = document.getElementById('statsGrid');
+            if (!grid) return;
+
+            // Stats might be incomplete if constructed manually. Default to 0.
+            const s = {
+                totalZones: stats.totalZones || 0,
+                totalPax: stats.totalPax || 0,
+                totalAlerts: stats.totalAlerts || 0,
+                totalMaintenanceHours: stats.totalMaintenanceHours || 0,
+                totalAdditionnelleHours: stats.totalAdditionnelleHours || 0,
+                totalOccurrencesMaintenance: stats.totalOccurrencesMaintenance || 0,
+                totalOccurrencesAdditionnelles: stats.totalOccurrencesAdditionnelles || 0
+            };
+
+            const kpiConfig = [
+                { id: 'kpi-zones', label: 'Total Zones', value: s.totalZones, icon: 'ri-map-pin-line', isFloat: false, suffix: '' },
+                { id: 'kpi-pax', label: 'Total Passagers', value: s.totalPax, icon: 'ri-group-line', isFloat: false, suffix: '' },
+                { id: 'kpi-alerts', label: 'Total Alertes', value: s.totalAlerts || 0, icon: 'ri-alert-line', isFloat: false, suffix: '' },
+                { id: 'kpi-maint', label: 'Heures Maintenance', value: s.totalMaintenanceHours, icon: 'ri-tools-line', isFloat: true, suffix: 'h' },
+                { id: 'kpi-renfort', label: 'Heures Renfort', value: s.totalAdditionnelleHours, icon: 'ri-time-line', isFloat: true, suffix: 'h' }
+            ];
+
+            const statsHtml = kpiConfig.map((kpi, index) => `
+                <div class="stat-card animate-enter" style="animation-delay: ${index * 100}ms">
+                    <div class="stat-header">
+                        <span class="stat-label">${kpi.label}</span>
+                        <i class="${kpi.icon} stat-icon"></i>
+                    </div>
+                    <div class="stat-value" id="${kpi.id}">0${kpi.suffix}</div>
+                    ${kpi.id === 'kpi-maint' ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">${s.totalOccurrencesMaintenance} interventions</div>` : ''}
+                    ${kpi.id === 'kpi-renfort' ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">${s.totalOccurrencesAdditionnelles} interventions</div>` : ''}
+                </div>
+            `).join('');
+
+            grid.innerHTML = statsHtml;
+
+            kpiConfig.forEach(kpi => {
+                const el = document.getElementById(kpi.id);
+                if (el) animateValue(el, 0, kpi.value, 500, kpi.isFloat, kpi.suffix);
+            });
+        }
+
+        function applyFiltersAndSort() {
+            const search = document.getElementById('searchZone').value.toLowerCase();
+            const limit = document.getElementById('rowLimit').value;
+
+            // Filter
+            let filtered = allMetrics.filter(m =>
+                m.zoneName.toLowerCase().includes(search)
+            );
+
+            // Sort
+            if (sortColumn) {
+                filtered.sort((a, b) => {
+                    let valA = a[sortColumn];
+                    let valB = b[sortColumn];
+                    if (sortColumn === 'dureeSpmSeconds' || sortColumn === 'dureeAlertesSeconds') valA = valA || 0;
+                    if (sortColumn === 'dureeSpecificSeconds') valA = valA || 0;
+
+                    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            } else {
+                // Default sort: Alertes desc, then Pax desc
+                filtered.sort((a, b) => (b.alertWOs || 0) - (a.alertWOs || 0) || b.paxTotal - a.paxTotal);
+            }
+
+            allZones = [...new Set(filtered.map(m => m.zoneName))].sort();
+            populateZoneFilters();
+
+            renderTable(filtered, limit);
+
+            // Update Top Zones chart
+            if (typeof renderTopZonesChart === 'function' && document.getElementById('chartTopZones')) {
+                renderTopZonesChart();
+            }
+        }
+
+        function sortTable(col) {
+            if (sortColumn === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = col;
+                sortDirection = 'desc';
+            }
+            applyFiltersAndSort();
+        }
+
+        function renderTable(data, limit = '30') {
+            const tbody = document.getElementById('tableContent');
+            if (data.length === 0) {
+                tbody.innerHTML = '<div class="error-state">Aucune donnée trouvée</div>';
+                document.getElementById('displayInfo').textContent = '';
+                return;
+            }
+
+            const displayData = limit === 'all' ? data : data.slice(0, parseInt(limit));
+            document.getElementById('displayInfo').textContent =
+                `Affichage de ${displayData.length} sur ${data.length} zones`;
+
+            let tableHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('zoneName')">Zone</th>
+                            <th onclick="sortTable('nbVisits')">Visites (Réel/Prévu)</th>
+                            <th onclick="sortTable('occurrencesMaintenance')">Maintenance</th>
+                            <th onclick="sortTable('occurrencesAdditionnelles')">Additionnel</th>
+                             <th onclick="sortTable('alertWOs')">Alertes (Nb)</th>
+                            <th onclick="sortTable('dureeSpecificSeconds')">Spécifique (Tps)</th>
+                            <th onclick="sortTable('paxTotal')">Passagers</th>
+                            <th onclick="sortTable('avgDuration')">Durée Moy.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            displayData.forEach(metric => {
+                const zoneIcon = getZoneIcon(metric.zoneName.length);
+                const mainSec = metric.dureeMaintenanceSeconds || 0;
+                const addSec = metric.dureeAdditionnelleSeconds || 0;
+                const totalSec = mainSec + addSec;
+                const totalOcc = (metric.occurrencesMaintenance || 0) + (metric.occurrencesAdditionnelles || 0);
+                const avgMin = totalOcc > 0 ? Math.round((totalSec / 60) / totalOcc) : 0;
+                const alertesMin = Math.round((metric.dureeAlertesSeconds || 0) / 60);
+                const specMin = Math.round((metric.dureeSpecificSeconds || 0) / 60);
+
+                // Real = Maint + Add Occurrences + Alertes
+                // Planned = maxVisits (pas minVisits)
+                const nbVisits = (metric.occurrencesMaintenance || 0) + (metric.occurrencesAdditionnelles || 0) + (metric.alertWOs || 0);
+                const maxVisits = metric.maxVisits || 0;
+                let visitBadgeClass = 'badge-neutral';
+                if (maxVisits > 0) {
+                    if (nbVisits === maxVisits) visitBadgeClass = 'badge-success';
+                    else if (nbVisits > maxVisits) visitBadgeClass = 'badge-warning';
+                    else visitBadgeClass = 'badge-danger';
+                }
+
+                tableHtml += `
+                    <tr>
+                        <td>
+                            <div class="cell-zone">
+                                <div class="cell-icon"><i class="${zoneIcon}"></i></div>
+                                <div class="cell-info">
+                                    <span style="font-weight: 500;">${metric.zoneName}</span>
+                                    <span class="cell-sub">${metric.zoneId.split('/').pop()}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="border-right: 1px solid var(--border);">
+                            ${maxVisits > 0
+                        ? `<span class="badge ${visitBadgeClass}">${nbVisits} / ${maxVisits}</span>`
+                        : `<span style="color: var(--text-muted); font-size: 0.9em;">-</span>`}
+                        </td>
+                        <td><span class="badge badge-neutral">${metric.occurrencesMaintenance || 0}</span></td>
+                        <td>${(metric.occurrencesAdditionnelles || 0) > 0 ? `<span class="badge badge-warning">${metric.occurrencesAdditionnelles}</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
+                        <td>${(metric.alertWOs || 0) > 0 ? `<span class="badge badge-danger">${metric.alertWOs}</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
+                        <td>${specMin > 0 ? `<span class="badge badge-neutral">${specMin} min</span>` : '<span style="color: var(--text-muted);">-</span>'}</td>
+                        <td style="font-weight: 600; font-family: monospace;">${(metric.paxTotal || 0).toLocaleString('fr-FR')}</td>
+                        <td style="text-align: right;"><span class="badge badge-success">${avgMin} min</span></td>
+                    </tr>
+                    `;
+            });
+
+            tableHtml += `</tbody></table>`;
+            document.getElementById('tableContent').innerHTML = tableHtml;
+        }
+
+        // Charts Helpers
+        function populateZoneFilters() {
+            [1, 2, 3].forEach(chartNum => {
+                const select = document.getElementById(`zoneFilter${chartNum}`);
+                if (!select) return;
+                const zonesHtml = allZones.map(zone =>
+                    `<option value="${zone}">${zone}</option>`
+                ).join('');
+                select.innerHTML = '<option value="all">Toutes les zones</option>' + zonesHtml;
+            });
+        }
+
+        function getChartOptions(yLabel, y1Label) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: { boxWidth: 10, usePointStyle: true }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear', display: true, position: 'left',
+                        title: { display: true, text: yLabel, font: { size: 12, weight: '600' } },
+                        grid: { color: '#f1f5f9' },
+                        beginAtZero: false,
+                        grace: '20%',
+                        ticks: {
+                            callback: v => v < 0 ? '' : v.toLocaleString('fr-FR')
+                        }
+                    },
+                    y1: {
+                        type: 'linear', display: true, position: 'right',
+                        title: { display: true, text: y1Label, font: { size: 12, weight: '600' } },
+                        grid: { display: false },
+                        min: 0,
+                        ticks: { callback: v => v.toLocaleString('fr-FR') }
+                    },
+                    x: { grid: { display: false } }
+                }
+            };
+        }
+
+        function createChart1() {
+            const canvas = document.getElementById('chart1');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter1') ? document.getElementById('zoneFilter1').value : 'all';
+            const { dates, data } = getChartData(zoneFilter);
+            if (chart1) chart1.destroy();
+            chart1 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        { label: 'Passagers', data: data.map(d => d.totalPax), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 2, yAxisID: 'y' },
+                        { label: 'Renfort (h)', data: data.map(d => d.totalAdditionnelleHours.toFixed(2)), borderColor: '#f59e0b', tension: 0.4, borderWidth: 2, yAxisID: 'y1' }
+                    ]
+                },
+                options: getChartOptions('Passagers', 'Heures Renfort')
+            });
+        }
+
+        function createChart2() {
+            const canvas = document.getElementById('chart2');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter2') ? document.getElementById('zoneFilter2').value : 'all';
+            const { dates, data } = getChartData(zoneFilter);
+            if (chart2) chart2.destroy();
+            chart2 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        { label: 'Passagers', data: data.map(d => d.totalPax), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 2, yAxisID: 'y' },
+                        { label: 'Alertes', data: data.map(d => d.totalAlerts), borderColor: '#ef4444', tension: 0.4, borderWidth: 2, yAxisID: 'y1' }
+                    ]
+                },
+                options: getChartOptions('Passagers', 'Alertes')
+            });
+        }
+
+        function createChart3() {
+            const canvas = document.getElementById('chart3');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const zoneFilter = document.getElementById('zoneFilter3') ? document.getElementById('zoneFilter3').value : 'all';
+            const { dates, data } = getChartData(zoneFilter);
+            if (chart3) chart3.destroy();
+            chart3 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        { label: 'Passagers', data: data.map(d => d.totalPax), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 2, yAxisID: 'y' },
+                        { label: 'Maintenance (h)', data: data.map(d => d.totalMaintenanceHours.toFixed(2)), borderColor: '#10b981', tension: 0.4, borderWidth: 2, yAxisID: 'y1' }
+                    ]
+                },
+                options: getChartOptions('Passagers', 'Heures Maintenance')
+            });
+        }
+
+        function updateChart(chartNum) {
+            if (!document.getElementById(`chart${chartNum}`)) return;
+            switch (chartNum) {
+                case 1: createChart1(); break;
+                case 2: createChart2(); break;
+                case 3: createChart3(); break;
+            }
+        }
+
+        // Modal functions
+        let modalChart = null;
+        let currentModalChartNum = null;
+
+        function openChartModal(chartNum) {
+            const modal = document.getElementById('chartModal');
+            const modalTitle = document.getElementById('modalChartTitle');
+            const zoneFilter = document.getElementById(`zoneFilter${chartNum}`).value;
+            const titles = { 1: 'Passagers & Renfort', 2: 'Passagers & Alertes', 3: 'Passagers & Maintenance' };
+            modalTitle.textContent = titles[chartNum];
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            currentModalChartNum = chartNum;
+            setTimeout(() => { createModalChart(chartNum, zoneFilter); }, 100);
+        }
+
+        function closeChartModal(event) {
+            if (event) {
+                if (event.target.id !== 'chartModal' && !event.target.closest('.ri-close-line')) return;
+                event.stopPropagation();
+            }
+            const modal = document.getElementById('chartModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            if (modalChart) { modalChart.destroy(); modalChart = null; }
+        }
+
+        function createModalChart(chartNum, zoneFilter) {
+            const canvas = document.getElementById('modalChart');
+            const container = canvas.parentElement;
+            const ctx = canvas.getContext('2d');
+            canvas.width = container.clientWidth - 64;
+            canvas.height = container.clientHeight - 64;
+            const { dates, data } = getChartData(zoneFilter);
+            if (modalChart) modalChart.destroy();
+            const configMap = {
+                1: { label2: 'Renfort (h)', data2: data.map(d => d.totalAdditionnelleHours.toFixed(2)), color2: '#f59e0b', y1Label: 'Heures Renfort' },
+                2: { label2: 'Alertes', data2: data.map(d => d.totalAlerts), color2: '#ef4444', y1Label: 'Alertes' },
+                3: { label2: 'Maintenance (h)', data2: data.map(d => d.totalMaintenanceHours.toFixed(2)), color2: '#10b981', y1Label: 'Heures Maintenance' }
+            };
+            const config = configMap[chartNum];
+            modalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        { label: 'Passagers', data: data.map(d => d.totalPax), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 2, yAxisID: 'y' },
+                        { label: config.label2, data: config.data2, borderColor: config.color2, tension: 0.4, borderWidth: 2, yAxisID: 'y1' }
+                    ]
+                },
+                options: getChartOptions('Passagers', config.y1Label)
+            });
+        }
+
+        loadAvailableDates();
+
+        // Chatbot Functions
+        function toggleChatbotTest() {
+            const body = document.getElementById('chatbotTestBody');
+            const icon = document.getElementById('chatbotTestIcon');
+
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                icon.className = 'ri-arrow-down-s-line';
+            } else {
+                body.style.display = 'none';
+                icon.className = 'ri-arrow-right-s-line';
+            }
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatbotInput');
+            const question = input.value.trim();
+
+            if (!question) return;
+
+            // Afficher la question de l'utilisateur
+            addChatMessage(question, 'user');
+            input.value = '';
+
+            // Afficher l'indicateur de typing
+            addTypingIndicator();
+
+            try {
+                const response = await fetchWithAuth(`${API_URL}/chat/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question,
+                        date: availableDates[currentDateIndex]
+                    })
+                });
+
+                const data = await response.json();
+
+                // Retirer l'indicateur de typing
+                removeTypingIndicator();
+
+                if (data.success) {
+                    addChatMessage(data.response, 'assistant', data.logId);
+                } else {
+                    addChatMessage(`Erreur : ${data.error}`, 'error');
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                addChatMessage('Impossible de contacter le serveur. Vérifiez que le backend est démarré.', 'error');
+            }
+        }
+
+        function addChatMessage(text, type, logId) {
+            const messagesDiv = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chatbot-message ${type}`;
+
+            if (type === 'assistant' && logId) {
+                messageDiv.innerHTML = `
+                    <div class="message-content">${text}</div>
+                    <div class="message-feedback">
+                        <button class="btn btn-icon btn-sm" onclick="sendFeedback(${logId}, 1)" title="Utile">
+                            <i class="ri-thumb-up-line"></i>
+                        </button>
+                        <button class="btn btn-icon btn-sm" onclick="sendFeedback(${logId}, -1)" title="Pas utile">
+                            <i class="ri-thumb-down-line"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                messageDiv.textContent = text;
+            }
+
+            messagesDiv.appendChild(messageDiv);
+
+            // Scroll vers le bas
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const messagesDiv = document.getElementById('chatbotMessages');
+            const typing = document.createElement('div');
+            typing.id = 'typingIndicator';
+            typing.className = 'chatbot-message assistant typing';
+            typing.innerHTML = '<span>⏳</span> Réflexion en cours...';
+            messagesDiv.appendChild(typing);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        async function sendFeedback(logId, rating) {
+            try {
+                await fetchWithAuth(`${API_URL}/chat/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ logId, rating })
+                });
+            } catch (error) {
+                console.error('Failed to send feedback:', error);
+            }
+        }
+    </script>
+
+</body>
+
+</html>
